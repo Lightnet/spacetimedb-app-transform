@@ -25,9 +25,19 @@ function degreeToRadians(degrees) {
   return degrees * (Math.PI / 180);
 }
 
+let transform3DFolder;
 let positionBinding;
 let rotationBinding;
 let scaleBinding;
+let entityLogBinding;
+let addTransform3DBinding;
+let removeTransform3DBinding;
+let deleteEntityBinding;
+
+let marker;
+
+
+let boxHelper;
 
 const PARAMS = {
   entityId:'',
@@ -81,10 +91,16 @@ function onInsert_Entity(_ctx, row){
   update_entities_list();
 }
 
+function onDelete_Entity(_ctx, row){
+  PARAMS.entities=PARAMS.entities.filter(r=>r.id!=row.id)
+  update_entities_list();
+}
+
 function setupDBEntity(){
   conn.subscriptionBuilder()
     .subscribe(tables.entity)
   conn.db.entity.onInsert(onInsert_Entity)
+  conn.db.entity.onDelete(onDelete_Entity)
 }
 //-----------------------------------------------
 // TRANSFORM 3D
@@ -118,14 +134,13 @@ function update_model_transform(mesh, row){
   //   row.localQuaternion.y,
   //   row.localQuaternion.z
   // )
-  console.log(row.localQuaternion);
+  // console.log(row.localQuaternion);
   mesh.quaternion.set(
     row.localQuaternion.x,
     row.localQuaternion.y,
     row.localQuaternion.z,
     row.localQuaternion.w
   )
-
   mesh.scale.set(
     row.localScale.x,
     row.localScale.y,
@@ -140,9 +155,18 @@ function insert_model(row){
   scene.add(cube)
 }
 
+function delete_model(ctx, row){
+  for(const mesh of scene.children){
+    if(mesh.userData?.row?.entityId == row.entityId){
+      scene.remove(mesh);
+    }
+  }
+  PARAMS.transform3d=PARAMS.transform3d.filter(r=>r.entityId!=row.entityId);
+}
+
 function onInsert_Transfrom3D(_ctx, row){
-  console.log("transform");
-  console.log(row);
+  // console.log("transform");
+  // console.log(row);
   PARAMS.transform3d.push(row);
   insert_model(row);
 }
@@ -170,6 +194,7 @@ function setupDBTransform3D(){
     .subscribe(tables.transform3d)
   conn.db.transform3d.onInsert(onInsert_Transfrom3D)
   conn.db.transform3d.onUpdate(onUpdate_Transfrom3D)
+  conn.db.transform3d.onDelete(delete_model)
 }
 
 
@@ -210,6 +235,14 @@ function setup_three(){
   const gridHelper = new THREE.GridHelper( size, divisions );
   scene.add( gridHelper );
 
+  const geometry = new THREE.OctahedronGeometry(0.4);
+  const edges = new THREE.EdgesGeometry(geometry);
+  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
+  marker = new THREE.LineSegments(edges, lineMaterial);
+  scene.add(marker)
+
+
+
   window.addEventListener('resize',onResize);
 
   // Start the loop
@@ -233,19 +266,30 @@ function onResize(){
   gizmo.update();
 }
 
+function update_select_marker(){
+  if(marker){
+    const transform = PARAMS.transform3d.find(e => e.entityId === PARAMS.entityId);
+    if(transform){
+      marker.position.set(
+        transform.localPosition.x,
+        transform.localPosition.y,
+        transform.localPosition.z
+      )
+    }
+  }
+}
+
 function animate() {
   if(orbitControls){
     orbitControls.update();
   }
+  update_select_marker();
   renderer.render(scene, camera);
   gizmo.render();
   requestAnimationFrame(animate);
 }
 
 setup_three();
-
-
-
 
 // van.add(document.body, windowLogin())
 van.add(document.body, App())
@@ -274,7 +318,7 @@ function update_entities_list(){
   }
   entitiesBinding = entityFolder.addBlade({
     view: 'list',
-    label: 'Entity ID:',
+    label: 'Select Entity:',
     options: entitiesOptions,
     value: '',
   }).on('change',(event)=>{
@@ -288,36 +332,37 @@ function selectEntity(id){
   const entity = PARAMS.entities.find(e => e.id === id);
   if(!entity) return;
   PARAMS.entityId = id;
-  console.log(entity);
+  entityLogBinding.disabled = false;
+  addTransform3DBinding.disabled = false;
+  removeTransform3DBinding.disabled = true;
+  deleteEntityBinding.disabled = false;
+
+  // console.log(entity);
+  transform3DFolder.disabled = true;
   const transform = PARAMS.transform3d.find(e => e.entityId === id);
   if(!transform) return;
-  console.log(transform);
-
+  // console.log(transform);
   PARAMS.t_position.x = transform.localPosition.x;
   PARAMS.t_position.y = transform.localPosition.y;
   PARAMS.t_position.z = transform.localPosition.z;
-
   if(positionBinding) positionBinding.refresh();
 
-  console.log(transform?.localQuaternion);
+  // console.log(transform?.localQuaternion);
   let quat = new THREE.Quaternion(transform.localQuaternion.x,transform.localQuaternion.y,transform.localQuaternion.z,transform.localQuaternion.w);
   const euler = new THREE.Euler().setFromQuaternion(quat, 'XYZ');
-  console.log(euler);
+  // console.log(euler);
   PARAMS.t_rotation.x = THREE.MathUtils.radToDeg(euler.x);
   PARAMS.t_rotation.y = THREE.MathUtils.radToDeg(euler.y);
   PARAMS.t_rotation.z = THREE.MathUtils.radToDeg(euler.z);
   // console.log(PARAMS.t_rotation);
-
   if(rotationBinding) rotationBinding.refresh();
-
-
   PARAMS.t_scale.x = transform.localScale.x;
   PARAMS.t_scale.y = transform.localScale.y;
   PARAMS.t_scale.z = transform.localScale.z;
-
   if(scaleBinding) scaleBinding.refresh();
-
-
+  transform3DFolder.disabled = false;
+  removeTransform3DBinding.disabled = false;
+  addTransform3DBinding.disabled = true;
 }
 
 
@@ -332,22 +377,67 @@ propsFolder.addBinding(PARAMS, 'entityId',{
   readonly:true
 })
 
-propsFolder.addButton({
+addTransform3DBinding = propsFolder.addButton({
   title: 'Add Transform 3D',
 }).on('click',()=>{
   console.log("add Transform 3D")
-  conn.reducers.createEntityTransform3D({
+  conn.reducers.addEntityTransform3D({
     entityId: PARAMS.entityId
-  })
-})
-
-propsFolder.addButton({
-  title: 'Remove Transform 3D',
+  });
+  setTimeout(()=>{
+    selectEntity(PARAMS.entityId)
+  },50)
+  
 });
+addTransform3DBinding.disabled = true;
 
-const transform3DFolder = pane.addFolder({
+removeTransform3DBinding = propsFolder.addButton({
+  title: 'Remove Transform 3D',
+}).on('click',()=>{
+  conn.reducers.removeEntityTransform3D({
+    entityId:PARAMS.entityId
+  })
+  setTimeout(()=>{
+    selectEntity(PARAMS.entityId)
+  },50)
+})
+removeTransform3DBinding.disabled = true;
+
+entityLogBinding = propsFolder.addButton({
+  title: 'Entity Log',
+}).on('click',()=>{
+  const entity = PARAMS.entities.find(e => e.id === PARAMS.entityId);
+  console.log(entity)
+
+  const transform = PARAMS.transform3d.find(e => e.entityId === PARAMS.entityId);
+  if(transform){
+    console.log("transform")
+    console.log(transform)
+  }
+
+})
+entityLogBinding.disabled = true;
+
+deleteEntityBinding = propsFolder.addButton({
+  title: 'Delete Entity',
+}).on('click',()=>{
+  try {
+    if(PARAMS.entityId !== "" ){
+      conn.reducers.deleteEntity({
+        entiyId:PARAMS.entityId
+      });
+    }
+  } catch (error) {
+    console.log("delete entity error!");
+  }
+})
+deleteEntityBinding.disabled = true;
+
+transform3DFolder = pane.addFolder({
   title: 'Transform 3D',
 });
+transform3DFolder.disabled=true;
+
 positionBinding = transform3DFolder.addBinding(PARAMS, 't_position',{label:'Position'}).on('change',()=>{
   if(PARAMS.entityId != ""){
     conn.reducers.setEntityLocalPosition({
@@ -370,24 +460,23 @@ rotationBinding = transform3DFolder.addBinding(PARAMS, 't_rotation',{label:'Rota
   console.log(rotation);
   if(PARAMS.entityId != ""){
     console.log(quat);
-    conn.reducers.setEntityLocalQuaternion({
-      entityId:PARAMS.entityId,
-      x:quat.x,
-      y:quat.y,
-      z:quat.z,
-      w:quat.w,
-    })
-
-    // conn.reducers.setEntityLocalRotation({
+    // conn.reducers.setEntityLocalQuaternion({
     //   entityId:PARAMS.entityId,
-    //   x:rotation.x,
-    //   y:rotation.y,
-    //   z:rotation.z,
+    //   x:quat.x,
+    //   y:quat.y,
+    //   z:quat.z,
+    //   w:quat.w,
     // })
+
+    conn.reducers.setEntityLocalRotation({
+      entityId:PARAMS.entityId,
+      x:rotation.x,
+      y:rotation.y,
+      z:rotation.z,
+    })
   }
 })
 scaleBinding = transform3DFolder.addBinding(PARAMS, 't_scale',{label:'Scale'}).on('change',()=>{
-
   if(PARAMS.entityId != ""){
     conn.reducers.setEntityLocalScale({
       entityId:PARAMS.entityId,
@@ -397,10 +486,6 @@ scaleBinding = transform3DFolder.addBinding(PARAMS, 't_scale',{label:'Scale'}).o
     })
   }
 })
-
-
-
-
 
 
 // pane.addButton({title:'Login'}).on('click',()=>{
@@ -429,9 +514,6 @@ scaleBinding = transform3DFolder.addBinding(PARAMS, 't_scale',{label:'Scale'}).o
 //     console.log("login error!")
 //   }
 // });
-
-
-
 
 
 // const accessEL = div({style:`

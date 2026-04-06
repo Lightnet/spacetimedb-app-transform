@@ -1,8 +1,14 @@
 //-----------------------------------------------
 // REDUCER ENTITY
 //-----------------------------------------------
+import { Quaternion, Euler } from 'three';
 import { table, t, SenderError } from 'spacetimedb/server';
 import spacetimedb from '../module';
+
+function degreeToRadians(degree:number) {
+  return degree * (Math.PI / 180);
+}
+
 //-----------------------------------------------
 // 
 //-----------------------------------------------
@@ -11,11 +17,18 @@ export const create_entity = spacetimedb.reducer({},
     ctx.db.entity.insert({
       id: ctx.newUuidV7().toString()
     });
-})
+});
+
+export const delete_entity = spacetimedb.reducer({entiyId:t.string()}, 
+  (ctx,{entiyId}) => {
+    ctx.db.transform3d.entityId.delete(entiyId);
+    ctx.db.entity.id.delete(entiyId);
+    // need to check transform
+});
 //-----------------------------------------------
 // 
 //-----------------------------------------------
-export const create_entity_transform3d = spacetimedb.reducer(
+export const add_entity_transform3d = spacetimedb.reducer(
   { entityId: t.string() }, 
   (ctx, { entityId }) => {
   const transform = ctx.db.transform3d.entityId.find(entityId);
@@ -45,6 +58,13 @@ export const create_entity_transform3d = spacetimedb.reducer(
     });
   }
 });
+
+export const remove_entity_transform3d = spacetimedb.reducer(
+  { entityId: t.string() }, 
+  (ctx, { entityId }) => {
+  ctx.db.transform3d.entityId.delete(entityId);
+});
+
 //-----------------------------------------------
 // 
 //-----------------------------------------------
@@ -61,18 +81,26 @@ export const set_entity_local_position = spacetimedb.reducer(
     ctx.db.transform3d.entityId.update(transform)
   }
 });
-// test
+// option using the ui editor degree to radian.
 export const set_entity_local_rotation = spacetimedb.reducer(
   { entityId: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),}, 
   (ctx, { entityId, x, y, z }) => {
   const transform = ctx.db.transform3d.entityId.find(entityId);
   if(transform){
-    console.log("update rotation");
-    transform.localQuaternion.x = x;
-    transform.localQuaternion.y = y;
-    transform.localQuaternion.z = z;
-    console.log(transform.localPosition)
-    ctx.db.transform3d.entityId.update(transform)
+    let quat = new Quaternion();
+    quat.setFromEuler(
+      new Euler(x,y,z)
+    )
+    console.log("quat");
+    console.log(quat);
+
+    // console.log("update rotation");
+    transform.localQuaternion.x = quat.x;
+    transform.localQuaternion.y = quat.y;
+    transform.localQuaternion.z = quat.z;
+    transform.localQuaternion.w = quat.w;
+    // console.log(transform.localPosition)
+    ctx.db.transform3d.entityId.update(transform);
   }
 });
 

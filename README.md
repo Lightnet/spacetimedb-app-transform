@@ -6,7 +6,9 @@
  - 2.1.0
 
 # Information:
-  This is transform 3d hierarchy to test parent and child matrix for position, rotation and scale.
+  Work in progress.
+
+  This is transform 3d hierarchy to test parent and child matrix for position, rotation and scale. Not added yet.
 
 # Transform 3D Hierarchy:
   With the help of Grok AI agent. It help reduce testing the transform 3D hierarchy. To handle position, rotation, sacle, matrix and relate to parent and child. Work in progress test.
@@ -19,6 +21,24 @@
 
 # Editor:
   Current testing the position, quaternion, scale to update for box transform 3d. Using the Tweakpane for debug sync from the SpaceTimeDB. Tweakpane required code how to setup and clean up and reuse ui.
+
+## Features:
+- [x] create entity
+- [x] delete entity and check for transform 3d to delete match id
+- [x] add transform 3d
+- [x] remove transform 3d
+- [x] select transform 3d
+  - [x] position
+  - [x] rotation
+  - [x] scale
+- [x] select yellow marker to which transform 3d
+- [ ] parent (not yet build)
+- [x] demo three js transform 3d hierarchy stand alone test.
+
+# Server feature:
+- [ ] transform 3d hierarchy
+- [ ] work in progress.
+
 
 # Config:
   Make sure the application database name match the server and client. Since using the ***spacetime dev*** command line to run development mode to watch and build.
@@ -53,7 +73,7 @@ spacetime dev --server local
 ```
 # SQL:
 ```
-spacetime sql --server local spacetime-app-transform "SELECT * FROM user_auth"
+spacetime sql --server local spacetime-app-transform "SELECT * FROM entity"
 
 spacetime sql --server local spacetime-app-transform "SELECT * FROM transform3d"
 
@@ -63,6 +83,7 @@ spacetime sql --server local spacetime-app-transform "SELECT * FROM transform3d"
 ```
 spacetime publish --server local spacetime-app-transform --delete-data
 ```
+ In case bug and can't update table error.
 
 # Credits:
 - https://spacetimedb.com/docs
