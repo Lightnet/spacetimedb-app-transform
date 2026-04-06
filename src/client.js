@@ -21,6 +21,13 @@ const board = new MessageBoard({top: "20px"})
 //-----------------------------------------------
 //
 //-----------------------------------------------
+function degreeToRadians(degrees) {
+  return degrees * (Math.PI / 180);
+}
+
+let positionBinding;
+let rotationBinding;
+let scaleBinding;
 
 const PARAMS = {
   entityId:'',
@@ -95,12 +102,41 @@ function createBox(){
   // cubeLine.matrixAutoUpdate = false; // disable to use matrix
   const axesHelper = new THREE.AxesHelper( 1 ); // '5' is the line size
   cubeLine.add( axesHelper );
+  console.log(cubeLine);
   return cubeLine;
+}
+
+function update_model_transform(mesh, row){
+  mesh.position.set(
+    row.localPosition.x,
+    row.localPosition.y,
+    row.localPosition.z
+  )
+  // test
+  // mesh.rotation.set(
+  //   row.localQuaternion.x,
+  //   row.localQuaternion.y,
+  //   row.localQuaternion.z
+  // )
+  console.log(row.localQuaternion);
+  mesh.quaternion.set(
+    row.localQuaternion.x,
+    row.localQuaternion.y,
+    row.localQuaternion.z,
+    row.localQuaternion.w
+  )
+
+  mesh.scale.set(
+    row.localScale.x,
+    row.localScale.y,
+    row.localScale.z
+  )
 }
 
 function insert_model(row){
   let cube = createBox();
   cube.userData.row = row
+  update_model_transform(cube, row)
   scene.add(cube)
 }
 
@@ -112,15 +148,11 @@ function onInsert_Transfrom3D(_ctx, row){
 }
 
 function update_model(row){
-  console.log(row);
+  // console.log(row);
   for(const mesh of scene.children ){
-    console.log(mesh);
+    // console.log(mesh);
     if(mesh.userData?.row?.entityId == row.entityId){
-      mesh.position.set(
-        row.localPosition.x,
-        row.localPosition.y,
-        row.localPosition.z
-      )
+      update_model_transform(mesh,row)
     }
   }
 }
@@ -246,10 +278,48 @@ function update_entities_list(){
     options: entitiesOptions,
     value: '',
   }).on('change',(event)=>{
-    console.log(event.value);
-    PARAMS.entityId = event.value;
+    selectEntity(event.value)
+    // console.log(event.value);
+    // PARAMS.entityId = event.value;
   });
 }
+
+function selectEntity(id){
+  const entity = PARAMS.entities.find(e => e.id === id);
+  if(!entity) return;
+  PARAMS.entityId = id;
+  console.log(entity);
+  const transform = PARAMS.transform3d.find(e => e.entityId === id);
+  if(!transform) return;
+  console.log(transform);
+
+  PARAMS.t_position.x = transform.localPosition.x;
+  PARAMS.t_position.y = transform.localPosition.y;
+  PARAMS.t_position.z = transform.localPosition.z;
+
+  if(positionBinding) positionBinding.refresh();
+
+  console.log(transform?.localQuaternion);
+  let quat = new THREE.Quaternion(transform.localQuaternion.x,transform.localQuaternion.y,transform.localQuaternion.z,transform.localQuaternion.w);
+  const euler = new THREE.Euler().setFromQuaternion(quat, 'XYZ');
+  console.log(euler);
+  PARAMS.t_rotation.x = THREE.MathUtils.radToDeg(euler.x);
+  PARAMS.t_rotation.y = THREE.MathUtils.radToDeg(euler.y);
+  PARAMS.t_rotation.z = THREE.MathUtils.radToDeg(euler.z);
+  // console.log(PARAMS.t_rotation);
+
+  if(rotationBinding) rotationBinding.refresh();
+
+
+  PARAMS.t_scale.x = transform.localScale.x;
+  PARAMS.t_scale.y = transform.localScale.y;
+  PARAMS.t_scale.z = transform.localScale.z;
+
+  if(scaleBinding) scaleBinding.refresh();
+
+
+}
+
 
 update_entities_list();
 
@@ -278,7 +348,7 @@ propsFolder.addButton({
 const transform3DFolder = pane.addFolder({
   title: 'Transform 3D',
 });
-transform3DFolder.addBinding(PARAMS, 't_position',{label:'Position'}).on('change',()=>{
+positionBinding = transform3DFolder.addBinding(PARAMS, 't_position',{label:'Position'}).on('change',()=>{
   if(PARAMS.entityId != ""){
     conn.reducers.setEntityLocalPosition({
       entityId:PARAMS.entityId,
@@ -288,8 +358,45 @@ transform3DFolder.addBinding(PARAMS, 't_position',{label:'Position'}).on('change
     })
   }
 })
-transform3DFolder.addBinding(PARAMS, 't_rotation',{label:'Rotation'})
-transform3DFolder.addBinding(PARAMS, 't_scale',{label:'Scale'})
+rotationBinding = transform3DFolder.addBinding(PARAMS, 't_rotation',{label:'Rotation'}).on('change',()=>{
+  let rotation = new THREE.Euler(
+    degreeToRadians(PARAMS.t_rotation.x),
+    degreeToRadians(PARAMS.t_rotation.y),
+    degreeToRadians(PARAMS.t_rotation.z)
+  );
+  let quat = new THREE.Quaternion();
+  quat.setFromEuler(rotation)
+
+  console.log(rotation);
+  if(PARAMS.entityId != ""){
+    console.log(quat);
+    conn.reducers.setEntityLocalQuaternion({
+      entityId:PARAMS.entityId,
+      x:quat.x,
+      y:quat.y,
+      z:quat.z,
+      w:quat.w,
+    })
+
+    // conn.reducers.setEntityLocalRotation({
+    //   entityId:PARAMS.entityId,
+    //   x:rotation.x,
+    //   y:rotation.y,
+    //   z:rotation.z,
+    // })
+  }
+})
+scaleBinding = transform3DFolder.addBinding(PARAMS, 't_scale',{label:'Scale'}).on('change',()=>{
+
+  if(PARAMS.entityId != ""){
+    conn.reducers.setEntityLocalScale({
+      entityId:PARAMS.entityId,
+      x:PARAMS.t_scale.x,
+      y:PARAMS.t_scale.y,
+      z:PARAMS.t_scale.z,
+    })
+  }
+})
 
 
 

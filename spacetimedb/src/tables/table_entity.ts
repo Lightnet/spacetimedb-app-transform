@@ -1,5 +1,5 @@
 import { table, t } from 'spacetimedb/server';
-import { Coordinates } from '../types';
+import { Coordinates, Quaternion } from '../types';
 // import { status } from '../types';
 
 export const entity = table(
@@ -22,7 +22,7 @@ export const transform3d = table(
     parentId: t.string().optional(),
     isDirty:t.bool().default(false),
     localPosition: Coordinates,
-    localQuaternion: Coordinates,
+    localQuaternion: Quaternion,
     localScale: Coordinates,
     localMatrix: t.array(t.f32()),
     worldMatrix: t.array(t.f32()),

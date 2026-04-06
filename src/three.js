@@ -2,9 +2,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-// import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { ViewportGizmo } from "three-viewport-gizmo";
-import van from "vanjs-core";
 import { Pane } from 'https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js';
 
 function degreeToRadians(degrees) {
@@ -28,7 +26,6 @@ document.body.appendChild(renderer.domElement);
 camera.position.z = 5;
 const gizmo = new ViewportGizmo(camera, renderer,{
   placement: 'bottom-left',
-  // offset: { left: 10, bottom: 10 } // fine-tune distance from edges
 });
 const orbitControls = new OrbitControls( camera, renderer.domElement );
 gizmo.attachControls(orbitControls);
@@ -50,28 +47,15 @@ const PARAMS = {
   entities:[],
   entityFolder:[]
 }
-// does not work
-// const control = new TransformControls(camera, renderer.domElement);
-// control.addEventListener('dragging-changed', (event) => {
-//   // console.log("dragging-changed: ",event.value);
-//   orbitControls.enabled = !event.value;
-// });
-// scene.add(control.getHelper());
 const axesHelper = new THREE.AxesHelper( 1 ); // '5' is the line size
 scene.add( axesHelper );
-// var cube;
 function createBox(){
   const geometry = new THREE.BoxGeometry(1, 1, 1);
-  // const wireframe = new THREE.WireframeGeometry( geometry );
   const edges = new THREE.EdgesGeometry(geometry);
-  // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-  // const cube = new THREE.Mesh(geometry, material);
-  // const cube = new THREE.Mesh(wireframe, material);
   const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-  // const cubeLine = new THREE.LineSegments(wireframe, lineMaterial);
   const cubeLine = new THREE.LineSegments(edges, lineMaterial);
   cubeLine.matrixAutoUpdate = false; // disable to use matrix
-  const axesHelper = new THREE.AxesHelper( 1 ); // '5' is the line size
+  const axesHelper = new THREE.AxesHelper( 1 );
   cubeLine.add( axesHelper );
   return cubeLine;
 }
@@ -82,10 +66,8 @@ function createBox(){
 function createEntity(x = 0, y = 0, z = 0, parentId = "") {
   const cube = createBox();
   scene.add(cube);
-  cube.matrixAutoUpdate = false;
-
+  cube.matrixAutoUpdate = false; //manual for server side emulator
   const id = crypto.randomUUID();
-
   const entity = {
     id: id,
     mesh: cube,
@@ -97,28 +79,21 @@ function createEntity(x = 0, y = 0, z = 0, parentId = "") {
     worldMatrix: new THREE.Matrix4(),
     children: []
   };
-
   updateLocalMatrix(entity);
   PARAMS.entities.push(entity);
-
   if (parentId) {
     const parent = PARAMS.entities.find(e => e.id === parentId);
     if (parent) parent.children.push(id);
   }
-
   // Important: Update world transform immediately
   updateWorldMatrix(entity, true);
-
   // Select the new entity
   selectEntity(id);
-
   // Refresh UI lists
   update_list_entities();
   update_entity_parent_list();
-
   return entity;
 }
-
 function updateLocalMatrix(entity) {
   entity.localMatrix.compose(
     entity.localPosition,
@@ -126,7 +101,6 @@ function updateLocalMatrix(entity) {
     entity.localScale
   );
 }
-
 function updateWorldMatrix(entity, recursive = true) {
   if (!entity) return;
 
@@ -149,7 +123,6 @@ function updateWorldMatrix(entity, recursive = true) {
     }
   }
 }
-
 // Call this after changing local transform or parent
 function updateTransformHierarchy(startEntity = null) {
   if (!startEntity) {
@@ -209,14 +182,11 @@ function update_list_entities(){
   
 }
 //-----------------------------------------------
-// 
+// TWEAKPANE
 //-----------------------------------------------
 const pane = new Pane();
-
 const hierarchyFolder = pane.addFolder({ title: 'Hierarchy' });
-
 hierarchyFolder.addBinding(PARAMS, 'selectEntityId', { readonly: true, label: 'Current' });
-
 function update_entity_parent_list(){
   if(parentBinding) parentBinding.dispose()
 
@@ -234,9 +204,7 @@ function update_entity_parent_list(){
     reparentEntity(PARAMS.selectEntityId, ev.value);
   });
 }
-
 update_entity_parent_list();
-
 function reparentEntity(childId, newParentId) {
   const child = PARAMS.entities.find(e => e.id === childId);
   if (!child) return;
@@ -264,7 +232,6 @@ function reparentEntity(childId, newParentId) {
   update_list_entities();
   // update_entity_parent_list();              // refresh parent UI
 }
-
 const entityFolder = pane.addFolder({
   title: 'Entity',
 });
@@ -301,21 +268,17 @@ select_rotation =transformFolder.addBinding(PARAMS, 'rotate');
 select_rotation.on('change', updateMatrix)
 select_scale = transformFolder.addBinding(PARAMS, 'scale');
 select_scale.on('change', updateMatrix)
-
 function updateMatrix() {
   console.log(PARAMS.object3d);
   if (!PARAMS.object3d) return;
-
   const selectedEntity = PARAMS.entities.find(e => e.mesh === PARAMS.object3d);
   if (!selectedEntity) return;
-
   // Update local values from UI (degrees → radians)
   selectedEntity.localPosition.set(
     PARAMS.position.x,
     PARAMS.position.y,
     PARAMS.position.z
   );
-
   selectedEntity.localQuaternion.setFromEuler(
     new THREE.Euler(
       degreeToRadians(PARAMS.rotate.x),
@@ -323,19 +286,15 @@ function updateMatrix() {
       degreeToRadians(PARAMS.rotate.z)
     )
   );
-
   selectedEntity.localScale.set(
     PARAMS.scale.x,
     PARAMS.scale.y,
     PARAMS.scale.z
   );
-
   updateLocalMatrix(selectedEntity);
-  // updateWorldMatrix(selectedEntity, true);
+  // updateWorldMatrix(selectedEntity, true);//?? not work while update the scene?
   updateTransformHierarchy(selectedEntity);   // propagate to children
-  
 }
-
 function selectEntity(id) {
   const entity = PARAMS.entities.find(e => e.id === id);
   if (!entity) return;
@@ -366,6 +325,5 @@ function selectEntity(id) {
 
   // Optional: highlight selected mesh (e.g. change color or add outline)
 }
-
-
+// create entity
 createEntity(0,0,0);
