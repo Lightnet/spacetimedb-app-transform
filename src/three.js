@@ -8,7 +8,7 @@ import { Pane } from 'https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpan
 function degreeToRadians(degrees) {
   return degrees * (Math.PI / 180);
 }
-
+let marker;
 // let entitiesFolder;
 let entitiesBinding;
 let entitySelectFolder;
@@ -33,9 +33,12 @@ const size = 10;
 const divisions = 10;
 const gridHelper = new THREE.GridHelper( size, divisions );
 scene.add( gridHelper );
+
+
 const PARAMS = {
   entityId:'',
   selectEntityId:'',
+  ph_handler:true,
   ph_position:{x:0,y:0,z:0},
   ph_rotate:{x:0,y:0,z:0},
   ph_scale:{x:1,y:1,z:1},
@@ -49,6 +52,17 @@ const PARAMS = {
 }
 const axesHelper = new THREE.AxesHelper( 1 ); // '5' is the line size
 scene.add( axesHelper );
+
+function createMarker(){
+  const geometry = new THREE.OctahedronGeometry(0.4);
+    const edges = new THREE.EdgesGeometry(geometry);
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
+    marker = new THREE.LineSegments(edges, lineMaterial);
+    scene.add(marker)
+}
+
+createMarker();
+
 function createBox(){
   const geometry = new THREE.BoxGeometry(1, 1, 1);
   const edges = new THREE.EdgesGeometry(geometry);
@@ -59,6 +73,7 @@ function createBox(){
   cubeLine.add( axesHelper );
   return cubeLine;
 }
+
 //-----------------------------------------------
 // 
 //-----------------------------------------------
@@ -235,6 +250,12 @@ function reparentEntity(childId, newParentId) {
 const entityFolder = pane.addFolder({
   title: 'Entity',
 });
+
+entityFolder.addBinding(PARAMS, 'ph_handler',{label:'Handle'}).on('change',()=>{
+  console.log(PARAMS.ph_handler);
+  if(axesHelper) axesHelper.visible = PARAMS.ph_handler;
+});
+
 entityFolder.addBinding(PARAMS, 'ph_position',{label:'Position:'}).on('change',()=>{
   axesHelper.position.set(
     PARAMS.ph_position.x,
@@ -242,6 +263,7 @@ entityFolder.addBinding(PARAMS, 'ph_position',{label:'Position:'}).on('change',(
     PARAMS.ph_position.z
   )
 })
+
 entityFolder.addBinding(PARAMS, 'ph_rotate',{label:'rotate:'});
 entityFolder.addBinding(PARAMS, 'ph_scale',{label:'scale:'});
 entityFolder.addButton({title:'create'}).on('click',()=>{
@@ -273,6 +295,7 @@ function updateMatrix() {
   if (!PARAMS.object3d) return;
   const selectedEntity = PARAMS.entities.find(e => e.mesh === PARAMS.object3d);
   if (!selectedEntity) return;
+  
   // Update local values from UI (degrees → radians)
   selectedEntity.localPosition.set(
     PARAMS.position.x,
@@ -292,8 +315,16 @@ function updateMatrix() {
     PARAMS.scale.z
   );
   updateLocalMatrix(selectedEntity);
+
   // updateWorldMatrix(selectedEntity, true);//?? not work while update the scene?
   updateTransformHierarchy(selectedEntity);   // propagate to children
+
+  // global position
+  const worldPosition = new THREE.Vector3();
+  worldPosition.setFromMatrixPosition( selectedEntity.worldMatrix );
+  if(marker) marker.position.set(worldPosition.x, worldPosition.y, worldPosition.z)
+
+
 }
 function selectEntity(id) {
   const entity = PARAMS.entities.find(e => e.id === id);
@@ -306,6 +337,9 @@ function selectEntity(id) {
   PARAMS.position.x = entity.localPosition.x;
   PARAMS.position.y = entity.localPosition.y;
   PARAMS.position.z = entity.localPosition.z;
+
+  if(marker) marker.position.set(PARAMS.position.x, PARAMS.position.y, PARAMS.position.z)
+
 
   const euler = new THREE.Euler().setFromQuaternion(entity.localQuaternion, 'XYZ');
   PARAMS.rotate.x = THREE.MathUtils.radToDeg(euler.x);
