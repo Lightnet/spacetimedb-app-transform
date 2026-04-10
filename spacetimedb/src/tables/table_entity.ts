@@ -20,7 +20,7 @@ export const transform3d = table(
   {
     entityId: t.string().primaryKey(),
     parentId: t.string().optional(),
-    // isDirty:t.bool().default(false), // test
+    isDirty:t.bool().default(true), // test
     localPosition: Coordinates,
     localQuaternion: Quaternion,
     localScale: Coordinates,

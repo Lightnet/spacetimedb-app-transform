@@ -143,7 +143,7 @@ function update_model_transform(mesh, row){
   if(row.worldMatrix){
     const newMatrix = new THREE.Matrix4();
     newMatrix.fromArray(row.worldMatrix)
-    console.log(newMatrix);
+    // console.log(newMatrix);
     mesh.matrix.copy(newMatrix);
   }
   
@@ -183,8 +183,8 @@ function update_model(row){
 }
 
 function onUpdate_Transfrom3D(_ctx, oldRow, newRow){
-  console.log("transform");
-  console.log(newRow);
+  // console.log("transform");
+  // console.log(newRow);
   PARAMS.transform3d = PARAMS.transform3d.filter(r=>r.entityId != newRow.entityId);
   PARAMS.transform3d.push(newRow);
   update_model(newRow);
@@ -535,32 +535,11 @@ rotationBinding = transform3DPropsFolder.addBinding(PARAMS, 't_rotation',{label:
       y:quat.y,
       z:quat.z,
       w:quat.w,
-    })
-    // conn.reducers.setEntityLocalRotation({
-    //   entityId:PARAMS.entityId,
-    //   x:PARAMS.t_rotation.x,
-    //   y:PARAMS.t_rotation.y,
-    //   z:PARAMS.t_rotation.z,
-    // })
-    // conn.reducers.setEntityLocalRotation({
-    //   entityId:PARAMS.entityId,
-    //   x:rotation.x,
-    //   y:rotation.y,
-    //   z:rotation.z,
-    // })
+    });
 
-    // conn.reducers.setEntityLocalRotation({
-    //   entityId:PARAMS.entityId,
-    //   x:degreeToRadians(PARAMS.t_rotation.x),
-    //   y:degreeToRadians(PARAMS.t_rotation.y),
-    //   z:degreeToRadians(PARAMS.t_rotation.z),
-    //   w:1,
-    //   // w:degreeToRadians(PARAMS.t_rotation.w),
+    // conn.reducers.transform3DComputeLocalMatrix({
+    //   id:PARAMS.entityId,
     // })
-
-    conn.reducers.transform3DComputeLocalMatrix({
-      id:PARAMS.entityId,
-    })
 
     conn.reducers.updateAllTransform3Ds();
   }
