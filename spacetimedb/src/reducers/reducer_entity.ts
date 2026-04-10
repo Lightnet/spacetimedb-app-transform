@@ -118,19 +118,26 @@ export const transform3d_compute_local_matrix = spacetimedb.reducer(
     }
 });
 
-
-// Put this near the top of reducer_entity.txt, outside any reducer
+// Put this near the top of reducer_entity.ts, outside any reducer
 function computeLocalMatrix(transform: any): THREE.Matrix4 {
   const mat = new THREE.Matrix4();
   mat.compose(
-    new THREE.Vector3(transform.localPosition.x, transform.localPosition.y, transform.localPosition.z),
+    new THREE.Vector3(
+      transform.localPosition.x,
+      transform.localPosition.y,
+      transform.localPosition.z
+    ),
     new THREE.Quaternion(
       transform.localQuaternion.x,
       transform.localQuaternion.y,
       transform.localQuaternion.z,
       transform.localQuaternion.w
     ),
-    new THREE.Vector3(transform.localScale.x, transform.localScale.y, transform.localScale.z)
+    new THREE.Vector3(
+      transform.localScale.x,
+      transform.localScale.y,
+      transform.localScale.z
+    )
   );
   return mat;
 }
@@ -148,9 +155,9 @@ function computeLocalMatrix(transform: any): THREE.Matrix4 {
 //   }
 // }
 
-// Better version - put this outside reducers
+// Efficient BFS version - marks entire subtree dirty when parent changes
 function markSubtreeDirty(ctx: any, rootEntityId: string) {
-  const toMark = [rootEntityId];        // queue for BFS
+  const toMark: string[] = [rootEntityId];
   const visited = new Set<string>();
 
   while (toMark.length > 0) {
@@ -160,40 +167,37 @@ function markSubtreeDirty(ctx: any, rootEntityId: string) {
 
     const transform = ctx.db.transform3d.entityId.find(entityId);
     if (transform) {
-      transform.isDirty = true;
-      ctx.db.transform3d.entityId.update(transform);
+      if (!transform.isDirty) {
+        transform.isDirty = true;
+        ctx.db.transform3d.entityId.update(transform);
+      }
     }
 
-    // Find children
+    // Find direct children and queue them
     for (const child of ctx.db.transform3d.iter()) {
-      if (child.parentId === entityId) {
+      if (child.parentId === entityId && !visited.has(child.entityId)) {
         toMark.push(child.entityId);
       }
     }
   }
 }
 
-
-
-
 //-----------------------------------------------
 // UPDATE ALL TRANSFORM3D TEST
 //-----------------------------------------------
-//main transform handle
+//main transforms handle
 export const update_all_transform3ds = spacetimedb.reducer((ctx) => {
-  console.log("=== Starting dirty transform hierarchy update ===");
+  console.log("=== Starting transform hierarchy update ===");
 
   const allTransforms = Array.from(ctx.db.transform3d.iter());
-
-  // Get currently dirty transforms
-  let dirtyList = allTransforms.filter(t => t.isDirty === true);
+  const dirtyList = allTransforms.filter(t => t.isDirty === true);
 
   if (dirtyList.length === 0) {
-    console.log("No dirty transforms.");
+    console.log("No dirty transforms to update.");
     return;
   }
 
-  console.log(`Found ${dirtyList.length} directly dirty transforms.`);
+  console.log(`Found ${dirtyList.length} dirty transforms.`);
 
   // Build children map for topological sorting
   const childrenMap = new Map<string, string[]>();
@@ -209,19 +213,18 @@ export const update_all_transform3ds = spacetimedb.reducer((ctx) => {
 
   function addWithChildren(transform: any) {
     if (sortedDirty.some(t => t.entityId === transform.entityId)) return;
-
     sortedDirty.push(transform);
 
     const childrenIds = childrenMap.get(transform.entityId) || [];
     for (const childId of childrenIds) {
-      const child = allTransforms.find(t => t.entityId === childId);
+      const child = allTransforms.find((t: any) => t.entityId === childId);
       if (child && child.isDirty) {
         addWithChildren(child);
       }
     }
   }
 
-  // Start from dirty roots
+  // Start from dirty roots (no dirty parent)
   const dirtyRoots = dirtyList.filter(t => 
     !t.parentId || t.parentId === "" || 
     !dirtyList.some(d => d.entityId === t.parentId)
@@ -231,25 +234,27 @@ export const update_all_transform3ds = spacetimedb.reducer((ctx) => {
     addWithChildren(root);
   }
 
-  // Add any remaining dirty
+  // Add any remaining dirty transforms
   for (const d of dirtyList) {
     if (!sortedDirty.some(t => t.entityId === d.entityId)) {
       sortedDirty.push(d);
     }
   }
 
-  console.log(`Processing ${sortedDirty.length} transforms in order.`);
+  console.log(`Processing ${sortedDirty.length} transforms in parent→child order.`);
 
-  // Update in sorted order
+  // Update in correct order
   let updatedCount = 0;
   for (const transform of sortedDirty) {
-    let worldMat = new THREE.Matrix4();
+    let worldMat: THREE.Matrix4;
 
     if (!transform.parentId || transform.parentId === "") {
+      // Root transform
       worldMat = computeLocalMatrix(transform);
     } else {
+      // Child transform - use parent's worldMatrix (parent should already be updated)
       const parent = ctx.db.transform3d.entityId.find(transform.parentId);
-      if (parent && parent.worldMatrix) {
+      if (parent?.worldMatrix) {
         const parentWorld = new THREE.Matrix4().fromArray(parent.worldMatrix);
         const localMat = computeLocalMatrix(transform);
         worldMat = parentWorld.clone().multiply(localMat);
@@ -258,15 +263,15 @@ export const update_all_transform3ds = spacetimedb.reducer((ctx) => {
       }
     }
 
+    // Write back
     transform.worldMatrix = worldMat.elements as any;
     transform.isDirty = false;
     ctx.db.transform3d.entityId.update(transform);
     updatedCount++;
   }
 
-  console.log(`Updated ${updatedCount} transforms.`);
+  console.log(`Transform hierarchy update completed. ${updatedCount} transforms updated.`);
 });
-
 
 //-----------------------------------------------
 // SET ALL TRANSFORM3D MATRIX NULL FOR DIRTY TEST
