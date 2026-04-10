@@ -20,12 +20,12 @@ export const transform3d = table(
   {
     entityId: t.string().primaryKey(),
     parentId: t.string().optional(),
-    isDirty:t.bool().default(false),
+    // isDirty:t.bool().default(false), // test
     localPosition: Coordinates,
     localQuaternion: Quaternion,
     localScale: Coordinates,
-    localMatrix: t.array(t.f32()),
-    worldMatrix: t.array(t.f32()),
-    children: t.array(t.string()),
+    localMatrix: t.array(t.f32()).optional(),
+    worldMatrix: t.array(t.f32()).optional(),
+    // children: t.array(t.string()), // test
   }
 );

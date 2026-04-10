@@ -43,3 +43,7 @@ export function validateMessage(text: string) {
     throw new SenderError('Messages must not be empty');
   }
 }
+
+export function degreeToRadians(degree:number) {
+  return degree * (Math.PI / 180);
+}

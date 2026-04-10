@@ -26,6 +26,7 @@ function degreeToRadians(degrees) {
 }
 
 let transform3DFolder;
+let transform3DPropsFolder;
 let positionBinding;
 let rotationBinding;
 let scaleBinding;
@@ -33,11 +34,8 @@ let entityLogBinding;
 let addTransform3DBinding;
 let removeTransform3DBinding;
 let deleteEntityBinding;
-
 let marker;
-
-
-let boxHelper;
+// let boxHelper;
 
 const PARAMS = {
   entityId:'',
@@ -135,12 +133,29 @@ function update_model_transform(mesh, row){
   //   row.localQuaternion.z
   // )
   // console.log(row.localQuaternion);
-  mesh.quaternion.set(
+  console.log(row.localQuaternion)
+  let quat = new THREE.Quaternion(
     row.localQuaternion.x,
     row.localQuaternion.y,
     row.localQuaternion.z,
     row.localQuaternion.w
   )
+  // mesh.quaternion.copy(quat).normalize();
+  // mesh.setRotationFromQuaternion(quat)
+  // mesh.quaternion.set( // conflict
+  //   row.localQuaternion.x,
+  //   row.localQuaternion.y,
+  //   row.localQuaternion.z,
+  //   row.localQuaternion.w
+  // ).normalize();
+  // mesh.rotation.setFromQuaternion(mesh.quaternion); // Force sync
+  // mesh.rotation.setFromQuaternion(quat); // Force sync
+  console.log(quat);
+  // mesh.quaternion.copy(quat); // Force sync
+  // mesh.updateMatrix()
+  // mesh.matrixAutoUpdate=true;
+  mesh.rotation.setFromQuaternion(quat);
+  
   mesh.scale.set(
     row.localScale.x,
     row.localScale.y,
@@ -197,7 +212,6 @@ function setupDBTransform3D(){
   conn.db.transform3d.onDelete(delete_model)
 }
 
-
 function App(){
 
   return div(
@@ -215,7 +229,6 @@ let camera;
 let renderer;
 let gizmo;
 let orbitControls;
-
 
 function setup_three(){
   scene = new THREE.Scene();
@@ -293,8 +306,13 @@ setup_three();
 
 // van.add(document.body, windowLogin())
 van.add(document.body, App())
+//-----------------------------------------------
+// TWEAKPANE
+//-----------------------------------------------
 const pane = new Pane();
-
+//-----------------------------------------------
+// ENTITY
+//-----------------------------------------------
 const entityFolder = pane.addFolder({
   title: 'Entity',
 });
@@ -304,6 +322,20 @@ entityFolder.addButton({
 }).on('click',()=>{
   conn.reducers.createEntity({})
 });
+deleteEntityBinding = entityFolder.addButton({
+  title: 'Delete Entity',
+}).on('click',()=>{
+  try {
+    if(PARAMS.entityId !== "" ){
+      conn.reducers.deleteEntity({
+        entiyId:PARAMS.entityId
+      });
+    }
+  } catch (error) {
+    console.log("delete entity error!");
+  }
+})
+deleteEntityBinding.disabled = true;
 
 let entitiesBinding;
 
@@ -338,7 +370,7 @@ function selectEntity(id){
   deleteEntityBinding.disabled = false;
 
   // console.log(entity);
-  transform3DFolder.disabled = true;
+  transform3DPropsFolder.disabled = true;
   const transform = PARAMS.transform3d.find(e => e.entityId === id);
   if(!transform) return;
   // console.log(transform);
@@ -360,24 +392,46 @@ function selectEntity(id){
   PARAMS.t_scale.y = transform.localScale.y;
   PARAMS.t_scale.z = transform.localScale.z;
   if(scaleBinding) scaleBinding.refresh();
-  transform3DFolder.disabled = false;
+  transform3DPropsFolder.disabled = false;
   removeTransform3DBinding.disabled = false;
   addTransform3DBinding.disabled = true;
 }
 
-
 update_entities_list();
-
-const propsFolder = pane.addFolder({
-  title: 'Props',
+//-----------------------------------------------
+// ENTITY TRANSFORM 3D HIERARCHY
+// hierarchy 
+//-----------------------------------------------
+const hierarchyFolder = pane.addFolder({
+  title: 'Transform 3D Hierarchy',
 });
 
-propsFolder.addBinding(PARAMS, 'entityId',{
+hierarchyFolder.addBlade({
+  view: 'list',
+  label: 'Parent:',
+  options: [
+    {text:"None", value:""}
+  ],
+  value: '',
+}).on('change',(event)=>{
+  selectEntity(event.value)
+  // console.log(event.value);
+  // PARAMS.entityId = event.value;
+});
+
+
+
+//-----------------------------------------------
+// ENTITY TRANSFORM 3D
+//-----------------------------------------------
+const transform3dFolder = pane.addFolder({
+  title: 'Entity Transform 3D',
+});
+transform3dFolder.addBinding(PARAMS, 'entityId',{
   label:'Select:',
   readonly:true
 })
-
-addTransform3DBinding = propsFolder.addButton({
+addTransform3DBinding = transform3dFolder.addButton({
   title: 'Add Transform 3D',
 }).on('click',()=>{
   console.log("add Transform 3D")
@@ -387,11 +441,9 @@ addTransform3DBinding = propsFolder.addButton({
   setTimeout(()=>{
     selectEntity(PARAMS.entityId)
   },50)
-  
 });
 addTransform3DBinding.disabled = true;
-
-removeTransform3DBinding = propsFolder.addButton({
+removeTransform3DBinding = transform3dFolder.addButton({
   title: 'Remove Transform 3D',
 }).on('click',()=>{
   conn.reducers.removeEntityTransform3D({
@@ -402,43 +454,27 @@ removeTransform3DBinding = propsFolder.addButton({
   },50)
 })
 removeTransform3DBinding.disabled = true;
-
-entityLogBinding = propsFolder.addButton({
+entityLogBinding = transform3dFolder.addButton({
   title: 'Entity Log',
 }).on('click',()=>{
   const entity = PARAMS.entities.find(e => e.id === PARAMS.entityId);
   console.log(entity)
-
   const transform = PARAMS.transform3d.find(e => e.entityId === PARAMS.entityId);
   if(transform){
     console.log("transform")
     console.log(transform)
   }
-
 })
 entityLogBinding.disabled = true;
 
-deleteEntityBinding = propsFolder.addButton({
-  title: 'Delete Entity',
-}).on('click',()=>{
-  try {
-    if(PARAMS.entityId !== "" ){
-      conn.reducers.deleteEntity({
-        entiyId:PARAMS.entityId
-      });
-    }
-  } catch (error) {
-    console.log("delete entity error!");
-  }
-})
-deleteEntityBinding.disabled = true;
-
-transform3DFolder = pane.addFolder({
-  title: 'Transform 3D',
+//-----------------------------------------------
+// ENTITY TRANSFORM 3D PROPS
+//-----------------------------------------------
+transform3DPropsFolder = pane.addFolder({
+  title: 'Transform 3D Props',
 });
-transform3DFolder.disabled=true;
-
-positionBinding = transform3DFolder.addBinding(PARAMS, 't_position',{label:'Position'}).on('change',()=>{
+transform3DPropsFolder.disabled=true;
+positionBinding = transform3DPropsFolder.addBinding(PARAMS, 't_position',{label:'Position'}).on('change',()=>{
   if(PARAMS.entityId != ""){
     conn.reducers.setEntityLocalPosition({
       entityId:PARAMS.entityId,
@@ -448,35 +484,54 @@ positionBinding = transform3DFolder.addBinding(PARAMS, 't_position',{label:'Posi
     })
   }
 })
-rotationBinding = transform3DFolder.addBinding(PARAMS, 't_rotation',{label:'Rotation'}).on('change',()=>{
+rotationBinding = transform3DPropsFolder.addBinding(PARAMS, 't_rotation',{label:'Rotation'}).on('change',()=>{
+
   let rotation = new THREE.Euler(
     degreeToRadians(PARAMS.t_rotation.x),
     degreeToRadians(PARAMS.t_rotation.y),
     degreeToRadians(PARAMS.t_rotation.z)
   );
+
   let quat = new THREE.Quaternion();
   quat.setFromEuler(rotation)
-
-  console.log(rotation);
+  // console.log(rotation);
   if(PARAMS.entityId != ""){
-    console.log(quat);
-    // conn.reducers.setEntityLocalQuaternion({
+    // console.log(quat);
+    conn.reducers.setEntityLocalQuaternion({
+      entityId:PARAMS.entityId,
+      x:quat.x,
+      y:quat.y,
+      z:quat.z,
+      w:quat.w,
+    })
+    // conn.reducers.setEntityLocalRotation({
     //   entityId:PARAMS.entityId,
-    //   x:quat.x,
-    //   y:quat.y,
-    //   z:quat.z,
-    //   w:quat.w,
+    //   x:PARAMS.t_rotation.x,
+    //   y:PARAMS.t_rotation.y,
+    //   z:PARAMS.t_rotation.z,
+    // })
+    // conn.reducers.setEntityLocalRotation({
+    //   entityId:PARAMS.entityId,
+    //   x:rotation.x,
+    //   y:rotation.y,
+    //   z:rotation.z,
     // })
 
-    conn.reducers.setEntityLocalRotation({
-      entityId:PARAMS.entityId,
-      x:rotation.x,
-      y:rotation.y,
-      z:rotation.z,
+    // conn.reducers.setEntityLocalRotation({
+    //   entityId:PARAMS.entityId,
+    //   x:degreeToRadians(PARAMS.t_rotation.x),
+    //   y:degreeToRadians(PARAMS.t_rotation.y),
+    //   z:degreeToRadians(PARAMS.t_rotation.z),
+    //   w:1,
+    //   // w:degreeToRadians(PARAMS.t_rotation.w),
+    // })
+
+    conn.reducers.transform3DComputeLocalMatrix({
+      id:PARAMS.entityId,
     })
   }
 })
-scaleBinding = transform3DFolder.addBinding(PARAMS, 't_scale',{label:'Scale'}).on('change',()=>{
+scaleBinding = transform3DPropsFolder.addBinding(PARAMS, 't_scale',{label:'Scale'}).on('change',()=>{
   if(PARAMS.entityId != ""){
     conn.reducers.setEntityLocalScale({
       entityId:PARAMS.entityId,
@@ -486,8 +541,6 @@ scaleBinding = transform3DFolder.addBinding(PARAMS, 't_scale',{label:'Scale'}).o
     })
   }
 })
-
-
 // pane.addButton({title:'Login'}).on('click',()=>{
 //   van.add(document.body, windowLogin())
 // });
