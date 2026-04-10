@@ -2,7 +2,7 @@
 // REDUCER ENTITY
 //-----------------------------------------------
 import { Quaternion, Euler } from 'three';
-import { table, t, SenderError } from 'spacetimedb/server';
+import { t, SenderError } from 'spacetimedb/server';
 import spacetimedb from '../module';
 import { degreeToRadians } from '../helper';
 import * as THREE from 'three';
@@ -86,7 +86,6 @@ export const set_transform3d_parent = spacetimedb.reducer(
     ctx.db.transform3d.entityId.update(child)
   }
 })
-
 export const transform3d_compute_local_matrix = spacetimedb.reducer(
   { id: t.string() },
   (ctx, { id }) => {
@@ -117,7 +116,6 @@ export const transform3d_compute_local_matrix = spacetimedb.reducer(
       console.log(mat.elements);
     }
 });
-
 // Put this near the top of reducer_entity.ts, outside any reducer
 function computeLocalMatrix(transform: any): THREE.Matrix4 {
   const mat = new THREE.Matrix4();
@@ -141,7 +139,6 @@ function computeLocalMatrix(transform: any): THREE.Matrix4 {
   );
   return mat;
 }
-
 // function markSubtreeDirty(ctx: any, entityId: string) {
 //   const transform = ctx.db.transform3d.entityId.find(entityId);
 //   if (!transform) return;
@@ -181,7 +178,6 @@ function markSubtreeDirty(ctx: any, rootEntityId: string) {
     }
   }
 }
-
 //-----------------------------------------------
 // UPDATE ALL TRANSFORM3D TEST
 //-----------------------------------------------
@@ -272,7 +268,6 @@ export const update_all_transform3ds = spacetimedb.reducer((ctx) => {
 
   console.log(`Transform hierarchy update completed. ${updatedCount} transforms updated.`);
 });
-
 //-----------------------------------------------
 // SET ALL TRANSFORM3D MATRIX NULL FOR DIRTY TEST
 //-----------------------------------------------
@@ -284,7 +279,6 @@ export const update_all_transform3ds_null = spacetimedb.reducer((ctx)=>{
     ctx.db.transform3d.entityId.update(entity);
   }
 })
-
 //-----------------------------------------------
 // GET TRANSFORM 3D WORLD MATRIX
 //-----------------------------------------------
@@ -303,7 +297,6 @@ export const get_transform3d_world_matrix = spacetimedb.reducer(
     }
   }
 });
-
 //-----------------------------------------------
 // REMOVE TRANSFORM 3D
 //-----------------------------------------------
@@ -315,7 +308,7 @@ export const remove_entity_transform3d = spacetimedb.reducer(
 //-----------------------------------------------
 // SET TRANSFORM 3D LOCAL POSITION
 //-----------------------------------------------
-export const set_entity_local_position = spacetimedb.reducer(
+export const set_transform3d_position = spacetimedb.reducer(
   { entityId: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),}, 
   (ctx, { entityId, x, y, z }) => {
   const transform = ctx.db.transform3d.entityId.find(entityId);
@@ -334,12 +327,12 @@ export const set_entity_local_position = spacetimedb.reducer(
 // SET TRANSFORM 3D LOCAL ROTATION DEGREE
 //-----------------------------------------------
 // option using the ui editor degree to radian.
-export const set_entity_local_rotation = spacetimedb.reducer(
+export const set_transform3d_rotation = spacetimedb.reducer(
   { entityId: t.string(),x:t.f64(), y:t.f64(),z:t.f64()}, 
   (ctx, { entityId, x, y, z }) => {
+  // console.log("ROTATION....");
   const transform = ctx.db.transform3d.entityId.find(entityId);
   if(transform){
-    
     let quat = new Quaternion();
     quat.setFromEuler(
       new Euler(
@@ -348,24 +341,22 @@ export const set_entity_local_rotation = spacetimedb.reducer(
         degreeToRadians(z)
       )
     )
-    // console.log("quat");
-    // console.log(quat);
-
     // console.log("update rotation");
+    // console.log(quat);
+    // console.log("quat.x: ",quat.x);
     transform.localQuaternion.x = quat.x;
     transform.localQuaternion.y = quat.y;
     transform.localQuaternion.z = quat.z;
     transform.localQuaternion.w = quat.w;
-    // console.log(transform.localPosition)
-    transform.isDirty; // need to update if there children
+    transform.isDirty = true; // need to update if there children
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update
     ctx.db.transform3d.entityId.update(transform);
   }
 });
 //-----------------------------------------------
-// SET TRANSFORM QAUT
+// SET TRANSFORM QUAT
 //-----------------------------------------------
-export const set_entity_local_quaternion = spacetimedb.reducer(
+export const set_transform3d_quaternion = spacetimedb.reducer(
   { entityId: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),w:t.f64(),}, 
   (ctx, { entityId, x, y, z, w }) => {
   const transform = ctx.db.transform3d.entityId.find(entityId);
@@ -375,16 +366,16 @@ export const set_entity_local_quaternion = spacetimedb.reducer(
     transform.localQuaternion.y = y;
     transform.localQuaternion.z = z;
     transform.localQuaternion.w = w;
-    console.log(transform.localPosition)
+    // console.log(transform.localPosition)
     transform.isDirty=true;
-    markSubtreeDirty(ctx, entityId);   // ← This is the key line
+    markSubtreeDirty(ctx, entityId);   // ← link transforms to update
     ctx.db.transform3d.entityId.update(transform)
   }
 });
 //-----------------------------------------------
-// SET TRANSFORM SCALE
+// SET TRANSFORM 3D SCALE
 //-----------------------------------------------
-export const set_entity_local_scale = spacetimedb.reducer(
+export const set_transform3d_scale = spacetimedb.reducer(
   { entityId: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),}, 
   (ctx, { entityId, x, y, z }) => {
   const transform = ctx.db.transform3d.entityId.find(entityId);
@@ -400,9 +391,9 @@ export const set_entity_local_scale = spacetimedb.reducer(
   }
 });
 //-----------------------------------------------
-// SET TRANSFORM LOCAL MATRIX
+// SET TRANSFORM 3D LOCAL MATRIX
 //-----------------------------------------------
-export const set_entity_local_matrix = spacetimedb.reducer(
+export const set_transform3d_local_matrix = spacetimedb.reducer(
   { entityId: t.string(), matrix: t.array(t.f32()) }, 
   (ctx, { entityId, matrix }) => {
   const transform = ctx.db.transform3d.entityId.find(entityId);
@@ -414,7 +405,7 @@ export const set_entity_local_matrix = spacetimedb.reducer(
 //-----------------------------------------------
 // SET TRANSFORM WORLD MATRIX
 //-----------------------------------------------
-export const set_entity_world_matrix = spacetimedb.reducer(
+export const set_transform3d_world_matrix = spacetimedb.reducer(
   { entityId: t.string(), matrix: t.array(t.f32()) }, 
   (ctx, { entityId, matrix }) => {
   const transform = ctx.db.transform3d.entityId.find(entityId);

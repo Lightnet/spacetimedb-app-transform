@@ -506,7 +506,7 @@ transform3DPropsFolder.disabled=true;
 
 positionBinding = transform3DPropsFolder.addBinding(PARAMS, 't_position',{label:'Position'}).on('change',()=>{
   if(PARAMS.entityId != ""){
-    conn.reducers.setEntityLocalPosition({
+    conn.reducers.setTransform3DPosition({
       entityId:PARAMS.entityId,
       x:PARAMS.t_position.x,
       y:PARAMS.t_position.y,
@@ -529,12 +529,19 @@ rotationBinding = transform3DPropsFolder.addBinding(PARAMS, 't_rotation',{label:
   // console.log(rotation);
   if(PARAMS.entityId != ""){
     // console.log(quat);
-    conn.reducers.setEntityLocalQuaternion({
+    // conn.reducers.setTransform3DQuaternion({
+    //   entityId:PARAMS.entityId,
+    //   x:quat.x,
+    //   y:quat.y,
+    //   z:quat.z,
+    //   w:quat.w,
+    // });
+
+    conn.reducers.setTransform3DRotation({
       entityId:PARAMS.entityId,
-      x:quat.x,
-      y:quat.y,
-      z:quat.z,
-      w:quat.w,
+      x:PARAMS.t_rotation.x,
+      y:PARAMS.t_rotation.y,
+      z:PARAMS.t_rotation.z,
     });
 
     // conn.reducers.transform3DComputeLocalMatrix({
@@ -547,7 +554,7 @@ rotationBinding = transform3DPropsFolder.addBinding(PARAMS, 't_rotation',{label:
 
 scaleBinding = transform3DPropsFolder.addBinding(PARAMS, 't_scale',{label:'Scale'}).on('change',()=>{
   if(PARAMS.entityId != ""){
-    conn.reducers.setEntityLocalScale({
+    conn.reducers.setTransform3DScale({
       entityId:PARAMS.entityId,
       x:PARAMS.t_scale.x,
       y:PARAMS.t_scale.y,

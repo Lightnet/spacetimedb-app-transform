@@ -11,11 +11,15 @@
 # Transform 3D Hierarchy:
   With the help of Grok AI agent. To able to use three js matrix and helper to handle transform 3D hierarchy. To handle position, rotation, scale, matrix and relate to parent and child.
 
-  There are different way to handle transform hierarchy in client but in server side. It will be tricky as it need to follow SpaceTimeDB format to able to create, update and delete entity and matrix4.
+  There are different way to handle transform hierarchy in client but in server side. It will be tricky as it need to follow SpaceTimeDB format to able to create, update and delete entity and matrix4. The reducer has one depth layer to child to query any more it would not work.
 
 - Schedule Tables
 - reducer (function for client to access)
 - trigger event
+
+## refs:
+- https://spacetimedb.com/docs/databases/transactions-atomicity
+
 
 # Editor:
   Current testing the position, quaternion, scale to update for box transform 3d. Using the Tweakpane for debug sync from the SpaceTimeDB. Tweakpane required code how to setup and clean up and reuse ui.
@@ -113,19 +117,19 @@ export const transform3d = table(
   {
     entityId: t.string().primaryKey(),
     parentId: t.string().optional(),
-    // isDirty:t.bool().default(false), // test
+    isDirty:t.bool().default(true),
     localPosition: Coordinates,
     localQuaternion: Quaternion,
     localScale: Coordinates,
     localMatrix: t.array(t.f32()).optional(),
     worldMatrix: t.array(t.f32()).optional(),
-    // children: t.array(t.string()), // test
   }
 );
 ```
 
 # Client api:
   Work in progress.
+  
 ## Entity
   Having id tag string for handle. For easy to add on to type of components.
 
@@ -161,9 +165,9 @@ conn.reducers.removeEntityTransform3D({
 ```
   Entity remove transform 3D.
 
-### setEntityLocalPosition
+### setTransform3DPosition
 ```js
-conn.reducers.setEntityLocalPosition({
+conn.reducers.setTransform3DPosition({
   entityId:PARAMS.entityId,
   x:PARAMS.t_position.x,
   y:PARAMS.t_position.y,
@@ -172,10 +176,21 @@ conn.reducers.setEntityLocalPosition({
 ```
   Transform 3D set local position.
 
-### setEntityLocalRotation:
-- Set transform 3D local Quaternion. It need to be convert. Threejs has the helper to make it easy to rotate base on degree.
+### setTransform3DRotation:
+  Three js has the helper class and functions to make rotate degree (x, y, z) to Quaternion (x, y, z, w).
 ```js
-conn.reducers.setEntityLocalRotation({
+conn.reducers.setTransform3DRotation({
+  entityId:PARAMS.entityId,
+  x:PARAMS.t_rotation.x,
+  y:PARAMS.t_rotation.y,
+  z:PARAMS.t_rotation.z,
+});
+```
+- This use degree to convert on the server side.
+
+### setTransform3DQuaternion:
+```js
+conn.reducers.setTransform3DQuaternion({
   entityId:PARAMS.entityId,
   x:rotation.x,
   y:rotation.y,
@@ -183,9 +198,10 @@ conn.reducers.setEntityLocalRotation({
   w:rotation.w
 })
 ```
+
 ### setEntityLocalScale:
 ```js
-conn.reducers.setEntityLocalScale({
+conn.reducers.setTransform3DScale({
   entityId:PARAMS.entityId,
   x:PARAMS.t_scale.x,
   y:PARAMS.t_scale.y,
@@ -196,7 +212,7 @@ conn.reducers.setEntityLocalScale({
 ```js
 conn.reducers.updateAllTransform3Ds();
 ```
-  This will handle update for parent to child matrix4 .
+  This will handle update for parent to child matrix4.
 
 ### updateAllTransform3DsNull:
 ```js
