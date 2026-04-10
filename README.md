@@ -21,6 +21,8 @@
 - https://spacetimedb.com/docs/databases/transactions-atomicity
 
 
+![Screenshot of browser test](screenshots/transform3d20260410.png)
+
 # Editor:
   Current testing the position, quaternion, scale to update for box transform 3d. Using the Tweakpane for debug sync from the SpaceTimeDB. Tweakpane required code how to setup and clean up and reuse ui.
 
@@ -129,7 +131,7 @@ export const transform3d = table(
 
 # Client api:
   Work in progress.
-  
+
 ## Entity
   Having id tag string for handle. For easy to add on to type of components.
 
