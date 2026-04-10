@@ -140,10 +140,13 @@ function update_model_transform(mesh, row){
   //   row.localScale.y,
   //   row.localScale.z
   // )
-  const newMatrix = new THREE.Matrix4();
-  newMatrix.fromArray(row.worldMatrix)
-  console.log(newMatrix);
-  mesh.matrix.copy(newMatrix);
+  if(row.worldMatrix){
+    const newMatrix = new THREE.Matrix4();
+    newMatrix.fromArray(row.worldMatrix)
+    console.log(newMatrix);
+    mesh.matrix.copy(newMatrix);
+  }
+  
 }
 
 function insert_model(row){
