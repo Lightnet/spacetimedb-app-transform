@@ -111,14 +111,113 @@ export const transform3d_compute_local_matrix = spacetimedb.reducer(
         // ),
         new THREE.Vector3(_transform3d.localScale.x, _transform3d.localScale.y, _transform3d.localScale.z)
       );
-
+      _transform3d.localMatrix = mat.elements;
+      ctx.db.transform3d.entityId.update(_transform3d)
       // console.log(mat);
       console.log(mat.elements);
-
-
     }
 });
 
+function computeLocalMatrix(ctx:any,id:string){
+  const _transform3d = ctx.db.transform3d.entityId.find(id);
+  console.log("computeLocalMatrix:", _transform3d);
+  if(_transform3d){
+    const mat = new THREE.Matrix4();
+    mat.compose(
+      new THREE.Vector3(_transform3d.localPosition.x, _transform3d.localPosition.y, _transform3d.localPosition.z),
+      new THREE.Quaternion(
+        _transform3d.localQuaternion.x,
+        _transform3d.localQuaternion.y,
+        _transform3d.localQuaternion.z,
+        _transform3d.localQuaternion.w
+      ),
+      new THREE.Vector3(_transform3d.localScale.x, _transform3d.localScale.y, _transform3d.localScale.z)
+    );
+    _transform3d.localMatrix = mat.elements;
+    console.log("_transform3d.localMatrix: ",_transform3d.localMatrix)
+    ctx.db.transform3d.entityId.update(_transform3d);
+    // const tt = ctx.db.transform3d.entityId.update(_transform3d);
+    // console.log("tt :", tt )
+    // console.log(mat);
+    // console.log(mat.elements);
+    return mat;
+  }else{
+    // return null;
+    return new THREE.Matrix4().identity();
+  }
+}
+
+function getWorldMatrix(ctx:any,id: string):any {
+  const _transform3d = ctx.db.transform3d.entityId.find(id);
+  // if (!_transform3d) return new THREE.Matrix4().identity();
+
+  let worldMatrix;
+  // console.log(typeof _transform3d.parentId);
+  if (_transform3d.parentId == "") {
+    console.log("not parent?")
+    worldMatrix = computeLocalMatrix(ctx, id).clone();
+    _transform3d.localMatrix = worldMatrix.elements;
+    _transform3d.worldMatrix = worldMatrix.elements;
+    ctx.db.transform3d.entityId.update(_transform3d);
+  }else{
+    console.log("parent!")
+    const parentWorld = getWorldMatrix(ctx,_transform3d.parentId);
+    const local = computeLocalMatrix(ctx,_transform3d.entityId);
+    if(parentWorld){
+      worldMatrix = parentWorld.clone().multiply(local);
+      _transform3d.worldMatrix = worldMatrix.elements;
+      ctx.db.transform3d.entityId.update(_transform3d);
+    }
+  }
+
+  return worldMatrix;
+}
+
+
+//-----------------------------------------------
+// GET TRANSFORM 3D WORLD MATRIX
+//-----------------------------------------------
+export const get_transform3d_world_matrix = spacetimedb.reducer(
+  { id: t.string() },
+  (ctx, { id }) => {
+  const _transform3d = ctx.db.transform3d.entityId.find(id);
+
+  if(_transform3d){
+    if(!_transform3d.parentId){
+      //_transform3d.worldMatrix = 
+    }else{
+      // get parent world
+      // local world 
+      // world matrix = parent world matrix multiply 
+    }
+  }
+});
+//-----------------------------------------------
+// UPDATE ALL TRANSFORM3D TEST
+//-----------------------------------------------
+export const update_all_transform3ds = spacetimedb.reducer((ctx)=>{
+  console.log("matrix");
+  for(const entity of ctx.db.transform3d.iter()){
+    let matrix = getWorldMatrix(ctx, entity.entityId);
+    console.log(matrix);
+  }
+})
+//-----------------------------------------------
+// SET ALL TRANSFORM3D TEST
+//-----------------------------------------------
+export const update_all_transform3ds_null = spacetimedb.reducer((ctx)=>{
+  console.log("matrix");
+  for(const entity of ctx.db.transform3d.iter()){
+    entity.localMatrix = undefined;
+    entity.worldMatrix = undefined;
+    ctx.db.transform3d.entityId.update(entity);
+  }
+})
+
+
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 // function getChildren(ctx: any, parentId: string | null): any[] {
 //   return ctx.db.transform3d
 //     .filter(e => e.parentId === parentId)

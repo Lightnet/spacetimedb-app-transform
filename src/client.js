@@ -34,6 +34,8 @@ let entityLogBinding;
 let addTransform3DBinding;
 let removeTransform3DBinding;
 let deleteEntityBinding;
+let hierarchyListBinding;
+let hierarchyFolder;
 let marker;
 // let boxHelper;
 
@@ -113,54 +115,35 @@ function createBox(){
   const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
   // const cubeLine = new THREE.LineSegments(wireframe, lineMaterial);
   const cubeLine = new THREE.LineSegments(edges, lineMaterial);
-  // cubeLine.matrixAutoUpdate = false; // disable to use matrix
+  cubeLine.matrixAutoUpdate = false; // disable to use matrix
   const axesHelper = new THREE.AxesHelper( 1 ); // '5' is the line size
   cubeLine.add( axesHelper );
-  console.log(cubeLine);
+  // console.log(cubeLine);
   return cubeLine;
 }
 
 function update_model_transform(mesh, row){
-  mesh.position.set(
-    row.localPosition.x,
-    row.localPosition.y,
-    row.localPosition.z
-  )
-  // test
-  // mesh.rotation.set(
-  //   row.localQuaternion.x,
-  //   row.localQuaternion.y,
-  //   row.localQuaternion.z
+  // mesh.position.set(
+  //   row.localPosition.x,
+  //   row.localPosition.y,
+  //   row.localPosition.z
   // )
-  // console.log(row.localQuaternion);
-  console.log(row.localQuaternion)
-  let quat = new THREE.Quaternion(
-    row.localQuaternion.x,
-    row.localQuaternion.y,
-    row.localQuaternion.z,
-    row.localQuaternion.w
-  )
-  // mesh.quaternion.copy(quat).normalize();
-  // mesh.setRotationFromQuaternion(quat)
-  // mesh.quaternion.set( // conflict
+  // let quat = new THREE.Quaternion(
   //   row.localQuaternion.x,
   //   row.localQuaternion.y,
   //   row.localQuaternion.z,
   //   row.localQuaternion.w
-  // ).normalize();
-  // mesh.rotation.setFromQuaternion(mesh.quaternion); // Force sync
-  // mesh.rotation.setFromQuaternion(quat); // Force sync
-  console.log(quat);
-  // mesh.quaternion.copy(quat); // Force sync
-  // mesh.updateMatrix()
-  // mesh.matrixAutoUpdate=true;
-  mesh.rotation.setFromQuaternion(quat);
-  
-  mesh.scale.set(
-    row.localScale.x,
-    row.localScale.y,
-    row.localScale.z
-  )
+  // )
+  // mesh.rotation.setFromQuaternion(quat);
+  // mesh.scale.set(
+  //   row.localScale.x,
+  //   row.localScale.y,
+  //   row.localScale.z
+  // )
+  const newMatrix = new THREE.Matrix4();
+  newMatrix.fromArray(row.worldMatrix)
+  console.log(newMatrix);
+  mesh.matrix.copy(newMatrix);
 }
 
 function insert_model(row){
@@ -253,8 +236,6 @@ function setup_three(){
   const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
   marker = new THREE.LineSegments(edges, lineMaterial);
   scene.add(marker)
-
-
 
   window.addEventListener('resize',onResize);
 
@@ -395,6 +376,7 @@ function selectEntity(id){
   transform3DPropsFolder.disabled = false;
   removeTransform3DBinding.disabled = false;
   addTransform3DBinding.disabled = true;
+  if(typeof update_transform3d_parent == 'function') update_transform3d_parent();
 }
 
 update_entities_list();
@@ -402,11 +384,11 @@ update_entities_list();
 // ENTITY TRANSFORM 3D HIERARCHY
 // hierarchy 
 //-----------------------------------------------
-const hierarchyFolder = pane.addFolder({
+hierarchyFolder = pane.addFolder({
   title: 'Transform 3D Hierarchy',
 });
 
-hierarchyFolder.addBlade({
+hierarchyListBinding = hierarchyFolder.addBlade({
   view: 'list',
   label: 'Parent:',
   options: [
@@ -418,6 +400,41 @@ hierarchyFolder.addBlade({
   // console.log(event.value);
   // PARAMS.entityId = event.value;
 });
+
+console.log("typeof hierarchyListBinding")
+console.log(typeof hierarchyListBinding)
+
+const update_transform3d_parent = function (){
+  // console.log(hierarchyListBinding);
+  // if(!hierarchyListBinding) return;
+  if(hierarchyListBinding) hierarchyListBinding.dispose();
+
+  let parentEntities = []
+  parentEntities.push({text:"None", value:""})
+  for(const entity of PARAMS.entities){
+    if(PARAMS.entityId != entity.id){
+      parentEntities.push({
+        text:entity.id, value:entity.id
+      })
+    }
+  }
+
+  hierarchyListBinding = hierarchyFolder.addBlade({
+    view: 'list',
+    label: 'Parent:',
+    options: parentEntities,
+    value: '',
+  }).on('change',(event)=>{
+    // selectEntity(event.value)
+    // console.log(event.value);
+    // PARAMS.entityId = event.value;
+    conn.reducers.setTransform3DParent({
+      entityId:PARAMS.entityId,
+      parentId:event.value
+    })
+
+  });
+}
 
 
 
@@ -474,6 +491,7 @@ transform3DPropsFolder = pane.addFolder({
   title: 'Transform 3D Props',
 });
 transform3DPropsFolder.disabled=true;
+
 positionBinding = transform3DPropsFolder.addBinding(PARAMS, 't_position',{label:'Position'}).on('change',()=>{
   if(PARAMS.entityId != ""){
     conn.reducers.setEntityLocalPosition({
@@ -483,7 +501,8 @@ positionBinding = transform3DPropsFolder.addBinding(PARAMS, 't_position',{label:
       z:PARAMS.t_position.z,
     })
   }
-})
+});
+
 rotationBinding = transform3DPropsFolder.addBinding(PARAMS, 't_rotation',{label:'Rotation'}).on('change',()=>{
 
   let rotation = new THREE.Euler(
@@ -530,7 +549,8 @@ rotationBinding = transform3DPropsFolder.addBinding(PARAMS, 't_rotation',{label:
       id:PARAMS.entityId,
     })
   }
-})
+});
+
 scaleBinding = transform3DPropsFolder.addBinding(PARAMS, 't_scale',{label:'Scale'}).on('change',()=>{
   if(PARAMS.entityId != ""){
     conn.reducers.setEntityLocalScale({
@@ -540,7 +560,24 @@ scaleBinding = transform3DPropsFolder.addBinding(PARAMS, 't_scale',{label:'Scale
       z:PARAMS.t_scale.z,
     })
   }
+});
+
+const testFolder = pane.addFolder({
+  title: 'Test',
+});
+
+testFolder.addButton({title:'transform list'}).on('click',()=>{
+  console.log(PARAMS.transform3d);
 })
+
+testFolder.addButton({title:'update all transform test'}).on('click',()=>{
+  conn.reducers.updateAllTransform3Ds();
+})
+
+testFolder.addButton({title:'set all transform null test'}).on('click',()=>{
+  conn.reducers.updateAllTransform3DsNull();
+})
+
 // pane.addButton({title:'Login'}).on('click',()=>{
 //   van.add(document.body, windowLogin())
 // });
