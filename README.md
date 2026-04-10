@@ -6,17 +6,15 @@
  - 2.1.0
 
 # Information:
-  Work in progress.
-
   This is transform 3D hierarchy to test parent and child matrix for position, rotation and scale. Sample Test.
 
 # Transform 3D Hierarchy:
-  With the help of Grok AI agent. It help reduce testing the transform 3D hierarchy. To handle position, rotation, sacle, matrix and relate to parent and child. Work in progress test.
+  With the help of Grok AI agent. To able to use three js matrix and helper to handle transform 3D hierarchy. To handle position, rotation, scale, matrix and relate to parent and child.
 
-  There are different way to handle transform hierarchy in client but in server side. Since all math matrix and code logics. Current testing three and later if move to math only logics.
+  There are different way to handle transform hierarchy in client but in server side. It will be tricky as it need to follow SpaceTimeDB format to able to create, update and delete entity and matrix4.
 
 - Schedule Tables
-- reducer
+- reducer (function for client to access)
 - trigger event
 
 # Editor:
@@ -31,9 +29,9 @@
   - [x] position
   - [x] rotation
   - [x] scale
-- [x] select yellow marker to which transform 3d
-- [x] parent (work in progress)
-  - [x] using the reducer to mannual update all transforms.
+- [x] select entity display yellow marker if transform 3d is added.
+- [x] parent
+  - [x] using the reducer to update all transforms base on isDirty propagation.
 - [x] demo three js transform 3d hierarchy stand alone test.
 
 # Server feature:
@@ -41,8 +39,7 @@
   - [x] still need to test more
   - [x] reducer
   - [ ] schedule
-
-
+  
 # Config:
   Make sure the application database name match the server and client. Since using the ***spacetime dev*** command line to run development mode to watch and build.
 

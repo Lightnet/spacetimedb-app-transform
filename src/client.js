@@ -313,15 +313,10 @@ const pane = new Pane();
 const entityFolder = pane.addFolder({
   title: 'Entity',
 });
-entityFolder.addButton({
-  title: 'Create',
-  // label: 'counter',   // optional
-}).on('click',()=>{
+entityFolder.addButton({title: 'Create'}).on('click',()=>{
   conn.reducers.createEntity({})
 });
-deleteEntityBinding = entityFolder.addButton({
-  title: 'Delete Entity',
-}).on('click',()=>{
+deleteEntityBinding = entityFolder.addButton({title: 'Delete Entity'}).on('click',()=>{
   try {
     if(PARAMS.entityId !== "" ){
       conn.reducers.deleteEntity({
@@ -332,6 +327,11 @@ deleteEntityBinding = entityFolder.addButton({
     console.log("delete entity error!");
   }
 })
+entityFolder.addButton({title: 'Entities Logs'}).on('click',()=>{
+  console.log(PARAMS.entities);
+  console.log(PARAMS.transform3d);
+});
+
 deleteEntityBinding.disabled = true;
 
 let entitiesBinding;
