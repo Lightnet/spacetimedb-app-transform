@@ -6,8 +6,8 @@ import { DbConnection, tables } from './module_bindings';
 import { Pane } from 'https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js';
 import van from "vanjs-core";
 import { Modal, MessageBoard } from "vanjs-ui";
-import { windowRegister } from './window_register';
-import { windowLogin } from './window_login';
+// import { windowRegister } from './window_register';
+// import { windowLogin } from './window_login';
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -196,7 +196,6 @@ function setupDBTransform3D(){
 }
 
 function App(){
-
   return div(
     div(
       label(() => `Status: ${networkStatus.val}`),
@@ -264,11 +263,25 @@ function update_select_marker(){
   if(marker){
     const transform = PARAMS.transform3d.find(e => e.entityId === PARAMS.entityId);
     if(transform){
-      marker.position.set(
-        transform.localPosition.x,
-        transform.localPosition.y,
-        transform.localPosition.z
-      )
+      // marker.position.set(
+      //   transform.localPosition.x,
+      //   transform.localPosition.y,
+      //   transform.localPosition.z
+      // )
+      const matrix = new THREE.Matrix4();
+      if(transform.worldMatrix){
+        matrix.fromArray(transform.worldMatrix);
+        const position = new THREE.Vector3();
+        position.setFromMatrixPosition(matrix);
+        marker.position.set(
+          position.x,
+          position.y,
+          position.z
+        )
+      }
+      marker.visible = true;
+    }else{
+      marker.visible = false;
     }
   }
 }
@@ -427,16 +440,12 @@ const update_transform3d_parent = function (){
   }).on('change',(event)=>{
     // selectEntity(event.value)
     // console.log(event.value);
-    // PARAMS.entityId = event.value;
     conn.reducers.setTransform3DParent({
       entityId:PARAMS.entityId,
       parentId:event.value
     })
-
   });
 }
-
-
 
 //-----------------------------------------------
 // ENTITY TRANSFORM 3D
@@ -501,6 +510,7 @@ positionBinding = transform3DPropsFolder.addBinding(PARAMS, 't_position',{label:
       z:PARAMS.t_position.z,
     })
   }
+  conn.reducers.updateAllTransform3Ds();
 });
 
 rotationBinding = transform3DPropsFolder.addBinding(PARAMS, 't_rotation',{label:'Rotation'}).on('change',()=>{
@@ -548,6 +558,8 @@ rotationBinding = transform3DPropsFolder.addBinding(PARAMS, 't_rotation',{label:
     conn.reducers.transform3DComputeLocalMatrix({
       id:PARAMS.entityId,
     })
+
+    conn.reducers.updateAllTransform3Ds();
   }
 });
 
@@ -559,6 +571,8 @@ scaleBinding = transform3DPropsFolder.addBinding(PARAMS, 't_scale',{label:'Scale
       y:PARAMS.t_scale.y,
       z:PARAMS.t_scale.z,
     })
+
+    conn.reducers.updateAllTransform3Ds();
   }
 });
 

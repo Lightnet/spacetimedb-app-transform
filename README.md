@@ -8,7 +8,7 @@
 # Information:
   Work in progress.
 
-  This is transform 3d hierarchy to test parent and child matrix for position, rotation and scale. Not added yet.
+  This is transform 3D hierarchy to test parent and child matrix for position, rotation and scale. Sample Test.
 
 # Transform 3D Hierarchy:
   With the help of Grok AI agent. It help reduce testing the transform 3D hierarchy. To handle position, rotation, sacle, matrix and relate to parent and child. Work in progress test.
@@ -32,12 +32,15 @@
   - [x] rotation
   - [x] scale
 - [x] select yellow marker to which transform 3d
-- [ ] parent (not yet build)
+- [x] parent (work in progress)
+  - [x] using the reducer to mannual update all transforms.
 - [x] demo three js transform 3d hierarchy stand alone test.
 
 # Server feature:
-- [ ] transform 3d hierarchy
-- [ ] work in progress.
+- [x] transform 3d hierarchy
+  - [x] still need to test more
+  - [x] reducer
+  - [ ] schedule
 
 
 # Config:
@@ -88,3 +91,83 @@ spacetime publish --server local spacetime-app-transform --delete-data
 # Credits:
 - https://spacetimedb.com/docs
 - Grok AI agent
+
+# api:
+  Work in progress.
+## Entity
+  Having id tag string for handle. For easy to add on to type of components.
+
+### createEntity:
+```js
+  conn.reducers.createEntity({})
+```
+  Create blank entity.
+
+### deleteEntity:
+```js
+  conn.reducers.deleteEntity({
+    entiyId:PARAMS.entityId
+  });
+```
+  Delete Entity base on entityId. Check for any components to be delete as well.
+
+## Transform 3D
+
+### addEntityTransform3D:
+```js
+conn.reducers.addEntityTransform3D({
+  entityId: PARAMS.entityId
+});
+```
+  Entity add transform 3D.
+
+### removeEntityTransform3D:
+```js
+conn.reducers.removeEntityTransform3D({
+  entityId:PARAMS.entityId
+})
+```
+  Entity remove transform 3D.
+
+### setEntityLocalPosition
+```js
+conn.reducers.setEntityLocalPosition({
+  entityId:PARAMS.entityId,
+  x:PARAMS.t_position.x,
+  y:PARAMS.t_position.y,
+  z:PARAMS.t_position.z
+})
+```
+  Transform 3D set local position.
+
+### setEntityLocalRotation:
+- Set transform 3D local Quaternion. It need to be convert. Threejs has the helper to make it easy to rotate base on degree.
+```js
+conn.reducers.setEntityLocalRotation({
+  entityId:PARAMS.entityId,
+  x:rotation.x,
+  y:rotation.y,
+  z:rotation.z,
+  w:rotation.w
+})
+```
+### setEntityLocalScale:
+```js
+conn.reducers.setEntityLocalScale({
+  entityId:PARAMS.entityId,
+  x:PARAMS.t_scale.x,
+  y:PARAMS.t_scale.y,
+  z:PARAMS.t_scale.z
+})
+```
+### updateAllTransform3Ds:
+```js
+conn.reducers.updateAllTransform3Ds();
+```
+  This will handle update for parent to child matrix4 .
+
+### updateAllTransform3DsNull:
+```js
+conn.reducers.updateAllTransform3DsNull();
+```
+  This is to clear out the matrix for tests.
