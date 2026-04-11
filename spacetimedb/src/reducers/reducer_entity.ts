@@ -85,7 +85,10 @@ export const set_transform3d_parent = spacetimedb.reducer(
     }
     ctx.db.transform3d.entityId.update(child)
   }
-})
+});
+//-----------------------------------------------
+// TRANSFORM 3D COMPUTE LOCAL MATRIX
+//-----------------------------------------------
 export const transform3d_compute_local_matrix = spacetimedb.reducer(
   { id: t.string() },
   (ctx, { id }) => {
@@ -414,6 +417,198 @@ export const set_transform3d_world_matrix = spacetimedb.reducer(
     ctx.db.transform3d.entityId.update(transform);
   }
 });
+
+
 //-----------------------------------------------
-// 
+//  TRANSFORM 2D
 //-----------------------------------------------
+
+//-----------------------------------------------
+// ADD ENTITY TRANSFORM 2D
+//-----------------------------------------------
+export const add_entity_transform2d = spacetimedb.reducer(
+  { entityId: t.string() }, 
+  (ctx, { entityId }) => {
+  const _transform2d = ctx.db.transform2d.entityId.find(entityId);
+  console.log("transform: ", _transform2d)
+  if(!_transform2d){
+    console.log("add transform 2d");
+    ctx.db.transform2d.insert({
+      position: { x: 0, y: 0},
+      rotation: 0,
+      scale: { x: 1, y: 1 },
+      entityId: entityId,
+      parentId: "",
+      isDirty: true,
+      localMatrix: [
+        1, 0, 0, // Column 1 (X-axis)
+        0, 1, 0, // Column 2 (Y-axis)
+        0, 0, 1  // Column 3 (Translation/Homogeneous)
+      ],
+      worldMatrix: [
+        1, 0, 0, // Column 1 (X-axis)
+        0, 1, 0, // Column 2 (Y-axis)
+        0, 0, 1  // Column 3 (Translation/Homogeneous)
+      ],
+    });
+  }
+});
+
+
+// Matrix is now stored as a flat array: [a, b, c, d, e, f, 0, 0, 1]  (row-major, 3x3)
+type Matrix2D = [number, number, number, number, number, number, number, number, number];
+
+const identity: Matrix2D = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+
+function translate2D(x: number, y: number): Matrix2D {
+  return [1, 0, x, 0, 1, y, 0, 0, 1];
+}
+
+function rotate2D(angleDeg: number): Matrix2D {
+  const rad = angleDeg * Math.PI / 180;
+  const c = Math.cos(rad);
+  const s = Math.sin(rad);
+  return [c, -s, 0, s, c, 0, 0, 0, 1];
+}
+
+function scale2D(sx: number, sy: number): Matrix2D {
+  return [sx, 0, 0, 0, sy, 0, 0, 0, 1];
+}
+
+// Matrix multiplication: C = A * B  (row-major)
+function multiply2D(a: Matrix2D, b: Matrix2D): Matrix2D {
+  const r: Matrix2D = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      for (let k = 0; k < 3; k++) {
+        r[i*3 + j] += a[i*3 + k] * b[k*3 + j];
+      }
+    }
+  }
+  return r;
+}
+
+//-----------------------------------------------
+// ADD TRANSFORM 2D POSITION
+//-----------------------------------------------
+export const set_transform2d_position = spacetimedb.reducer(
+  { entityId: t.string(),x:t.f64(), y:t.f64()}, 
+  (ctx, { entityId, x, y}) => {
+  const _transform2d = ctx.db.transform2d.entityId.find(entityId);
+  if(_transform2d){
+    console.log("update position2d");
+    _transform2d.position.x = x;
+    _transform2d.position.y = y;
+
+
+    let localMatrix:Matrix2D = multiply2D(
+      translate2D(_transform2d.position.x, _transform2d.position.y),
+      multiply2D(rotate2D(_transform2d.rotation), scale2D(_transform2d.scale.x, _transform2d.scale.y))
+    );
+    console.log(localMatrix)
+
+    _transform2d.localMatrix = localMatrix;
+    _transform2d.worldMatrix = localMatrix;
+
+
+    // let matrix = new THREE.Matrix3();
+
+    // let mScale = new THREE.Matrix3().makeScale(_transform2d.scale.x, _transform2d.scale.y);
+    // let mRot = new THREE.Matrix3().makeRotation(_transform2d.rotation);
+    // let mTrans = new THREE.Matrix3().makeTranslation(_transform2d.position.x, _transform2d.position.y);
+
+    // // Order: Translate * Rotate * Scale
+    // matrix.multiplyMatrices(mTrans, mRot);
+    // matrix.multiply(mScale);
+
+    // _transform2d.localMatrix = matrix.elements;
+    // _transform2d.worldMatrix = matrix.elements;
+    // console.log(matrix.elements);
+
+    // transform.isDirty = true; // need to update if there children
+    // markSubtreeDirty(ctx, entityId);   // ← link transforms to update
+    console.log(_transform2d.position)
+    ctx.db.transform2d.entityId.update(_transform2d)
+  }
+});
+//-----------------------------------------------
+// ADD TRANSFORM 2D ROTATION
+//-----------------------------------------------
+export const set_transform2d_rotation = spacetimedb.reducer(
+  { entityId: t.string(), rotation:t.f64()}, 
+  (ctx, { entityId, rotation}) => {
+  const _transform2d = ctx.db.transform2d.entityId.find(entityId);
+  if(_transform2d){
+    console.log("update position2d");
+    _transform2d.rotation = rotation;
+
+    // entity.localMatrix = multiply2D(
+    //   translate2D(entity.position.x, entity.position.y),
+    //   multiply2D(rotate2D(entity.rotation), scale2D(entity.scale.x, entity.scale.y))
+    // );
+
+    let localMatrix:Matrix2D = multiply2D(
+      translate2D(_transform2d.position.x, _transform2d.position.y),
+      multiply2D(rotate2D(_transform2d.rotation), scale2D(_transform2d.scale.x, _transform2d.scale.y))
+    );
+
+    // let matrix = new THREE.Matrix3();
+
+    // let mScale = new THREE.Matrix3().makeScale(_transform2d.scale.x, _transform2d.scale.y);
+    // let mRot = new THREE.Matrix3().makeRotation(_transform2d.rotation);
+    // let mTrans = new THREE.Matrix3().makeTranslation(_transform2d.position.x, _transform2d.position.y);
+
+    // // Order: Translate * Rotate * Scale
+    // matrix.multiplyMatrices(mTrans, mRot);
+    // matrix.multiply(mScale);
+
+    // _transform2d.localMatrix = matrix.elements;
+    // _transform2d.worldMatrix = matrix.elements;
+    _transform2d.localMatrix = localMatrix;
+    _transform2d.worldMatrix = localMatrix;
+
+    // transform.isDirty = true; // need to update if there children
+    // markSubtreeDirty(ctx, entityId);   // ← link transforms to update
+    // console.log(transform.localPosition)
+    ctx.db.transform2d.entityId.update(_transform2d)
+  }
+});
+//-----------------------------------------------
+// ADD TRANSFORM 2D SCALE
+//-----------------------------------------------
+export const set_transform2d_scale = spacetimedb.reducer(
+  { entityId: t.string(),x:t.f64(), y:t.f64()}, 
+  (ctx, { entityId, x, y}) => {
+  const _transform2d = ctx.db.transform2d.entityId.find(entityId);
+  if(_transform2d){
+    console.log("update position2d");
+    _transform2d.scale.x = x;
+    _transform2d.scale.y = y;
+
+    let localMatrix:Matrix2D = multiply2D(
+      translate2D(_transform2d.position.x, _transform2d.position.y),
+      multiply2D(rotate2D(_transform2d.rotation), scale2D(_transform2d.scale.x, _transform2d.scale.y))
+    );
+    _transform2d.localMatrix = localMatrix;
+    _transform2d.worldMatrix = localMatrix;
+
+    // transform.isDirty = true; // need to update if there children
+    // markSubtreeDirty(ctx, entityId);   // ← link transforms to update
+    // console.log(transform.localPosition)
+    ctx.db.transform2d.entityId.update(_transform2d)
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+

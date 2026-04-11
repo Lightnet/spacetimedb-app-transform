@@ -49,7 +49,7 @@ export const transform2d = table(
     isDirty:t.bool().default(true),
     position: SVector2,
     rotation: t.f32(),
-    localScale: SVector2,
+    scale: SVector2,
     localMatrix: t.array(t.f32()).optional(),
     worldMatrix: t.array(t.f32()).optional(),
   }

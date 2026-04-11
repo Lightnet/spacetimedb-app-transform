@@ -4,7 +4,7 @@
 import { schema, table, t, SenderError  } from 'spacetimedb/server';
 import { sessions } from './tables/table_session';
 import { users, userAuth } from './tables/table_user';
-import { entity, transform3d } from './tables/table_entity';
+import { entity, transform2d, transform3d } from './tables/table_entity';
 //-----------------------------------------------
 // SCEHEMA
 //-----------------------------------------------
@@ -14,6 +14,7 @@ const spacetimedb = schema({
   userAuth,
   entity,
   transform3d,
+  transform2d,
 });
 //-----------------------------------------------
 // INIT
@@ -36,7 +37,7 @@ export const onConnect = spacetimedb.clientConnected(ctx => {
     connected_at: ctx.timestamp,
     userId: undefined
   });
-
+  
   // const user = ctx.db.user.identity.find(ctx.sender);
   // if (user) {
   //   ctx.db.user.id.update({ ...user, online: true });
