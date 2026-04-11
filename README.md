@@ -8,6 +8,8 @@
 # Information:
   This is transform 3D hierarchy to test parent and child matrix for position, rotation and scale. Sample Test.
 
+  Transform2D work in progress build.
+
 # Transform 3D Hierarchy:
   With the help of Grok AI agent. To able to use three js matrix and helper to handle transform 3D hierarchy. To handle position, rotation, scale, matrix and relate to parent and child.
 
@@ -41,11 +43,16 @@
 - [x] demo three js transform 3d hierarchy stand alone test.
 
 # Server feature:
-- [x] transform 3d hierarchy
+- [x] transform 3D hierarchy
   - [x] still need to test more
   - [x] reducer
   - [ ] schedule
-  
+- [x] transform 2D hierarchy
+  - [x] position
+  - [x] rotation
+  - [x] scale
+  - [ ] parnet to child update.
+
 # Config:
   Make sure the application database name match the server and client. Since using the ***spacetime dev*** command line to run development mode to watch and build.
 
@@ -85,6 +92,14 @@ spacetime sql --server local spacetime-app-transform "SELECT * FROM transform3d"
 
 ```
  For query table in command line.
+
+# SQL to text file:
+
+```
+spacetime sql --server local spacetime-app-transform "SELECT * FROM transform3d" > backup_your_table.txt
+
+spacetime sql --server local spacetime-app-transform "SELECT * FROM transform2d" > backup_your_table.txt
+```
 
 # Delete
 ```

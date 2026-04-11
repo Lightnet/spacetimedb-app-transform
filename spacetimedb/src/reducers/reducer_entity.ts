@@ -454,6 +454,13 @@ export const add_entity_transform2d = spacetimedb.reducer(
   }
 });
 
+export const remove_entity_transform2d = spacetimedb.reducer(
+  { entityId: t.string() }, 
+  (ctx, { entityId }) => {
+    ctx.db.transform2d.entityId.delete(entityId);
+    console.log("delete transform2d id:", entityId)
+});
+
 
 // Matrix is now stored as a flat array: [a, b, c, d, e, f, 0, 0, 1]  (row-major, 3x3)
 type Matrix2D = [number, number, number, number, number, number, number, number, number];
@@ -490,7 +497,7 @@ function multiply2D(a: Matrix2D, b: Matrix2D): Matrix2D {
 }
 
 //-----------------------------------------------
-// ADD TRANSFORM 2D POSITION
+// SET TRANSFORM 2D POSITION
 //-----------------------------------------------
 export const set_transform2d_position = spacetimedb.reducer(
   { entityId: t.string(),x:t.f64(), y:t.f64()}, 
@@ -533,7 +540,7 @@ export const set_transform2d_position = spacetimedb.reducer(
   }
 });
 //-----------------------------------------------
-// ADD TRANSFORM 2D ROTATION
+// SET TRANSFORM 2D ROTATION
 //-----------------------------------------------
 export const set_transform2d_rotation = spacetimedb.reducer(
   { entityId: t.string(), rotation:t.f64()}, 
@@ -575,7 +582,7 @@ export const set_transform2d_rotation = spacetimedb.reducer(
   }
 });
 //-----------------------------------------------
-// ADD TRANSFORM 2D SCALE
+// SET TRANSFORM 2D SCALE
 //-----------------------------------------------
 export const set_transform2d_scale = spacetimedb.reducer(
   { entityId: t.string(),x:t.f64(), y:t.f64()}, 

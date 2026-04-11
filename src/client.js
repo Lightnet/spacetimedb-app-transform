@@ -25,6 +25,11 @@ function degreeToRadians(degrees) {
   return degrees * (Math.PI / 180);
 }
 
+function radiansToDegree(radians) {
+  return radians * (180 / Math.PI);
+}
+
+
 
 // Matrix is now stored as a flat array: [a, b, c, d, e, f, 0, 0, 1]  (row-major, 3x3)
 // type Matrix2D = [number, number, number, number, number, number, number, number, number];
@@ -82,7 +87,7 @@ function getRotationFromMatrix(m) {
 }
 
 /**
- * Extract average scale from the 2D world matrix (keeps it simple)
+ * Extract average scale from the 2D world matrix
  */
 function getScaleFromMatrix(m) {
   const scaleX = Math.hypot(m[0], m[3]);   // length of transformed X axis
@@ -90,8 +95,6 @@ function getScaleFromMatrix(m) {
 
   return { x: scaleX, y: scaleY };
 }
-
-
 
 let transform3DFolder;
 let transform3DPropsFolder;
@@ -105,6 +108,15 @@ let deleteEntityBinding;
 let hierarchyListBinding;
 let hierarchyFolder;
 let marker;
+
+
+let addTransform2DBinding;
+let removeTransform2DBinding;
+
+let position2DBinding;
+let rotation2DBinding;
+let scale2DBinding;
+
 
 const PARAMS = {
   entityId:'',
@@ -195,7 +207,7 @@ function createBox(){
   return cubeLine;
 }
 
-function update_model_transform(mesh, row){
+function update_model_transform3d(mesh, row){
   // mesh.position.set(
   //   row.localPosition.x,
   //   row.localPosition.y,
@@ -225,7 +237,7 @@ function update_model_transform(mesh, row){
 function insert_model(row){
   let cube = createBox();
   cube.userData.row = row
-  update_model_transform(cube, row)
+  update_model_transform3d(cube, row)
   scene.add(cube)
 }
 
@@ -250,7 +262,7 @@ function update_model(row){
   for(const mesh of scene.children ){
     // console.log(mesh);
     if(mesh.userData?.row?.entityId == row.entityId){
-      update_model_transform(mesh,row)
+      update_model_transform3d(mesh,row)
     }
   }
 }
@@ -278,75 +290,34 @@ function setupDBTransform3D(){
 function create_2d(){
   let size = 1
   const geometry = new THREE.PlaneGeometry(size, size);
-  const material = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-  const mesh = new THREE.Mesh(geometry, material);
+  // const material = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+  // const mesh = new THREE.Mesh(geometry, material);
+
+  const edges = new THREE.EdgesGeometry(geometry);
+  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+  const mesh = new THREE.LineSegments(edges, lineMaterial);
   // mesh.matrixAutoUpdate = false; // disable to use matrix
   return mesh;
+}
+
+function update_model2d(mesh, row){
+  const worldPos = transformPoint(row.worldMatrix, 0, 0);
+  let worldRotation = getRotationFromMatrix(row.worldMatrix)
+  let worldScale = getScaleFromMatrix(row.worldMatrix)
+
+  // worldRotation = row.rotation;
+  mesh.position.set(worldPos.x, worldPos.y, 0);
+  mesh.rotation.z = worldRotation;
+  mesh.scale.set(worldScale.x, worldScale.y, 1);
 }
 
 function insert_model2d(row){
   let cmesh = create_2d();
   cmesh.userData.row = row;
   if(row.worldMatrix){
-    // cmesh.matrixAutoUpdate = true; // disable to use matrix
-    // let m3 = new THREE.Matrix3();
     // console.log(row.worldMatrix)
     // m3.fromArray(row.worldMatrix);
-    const worldPos = transformPoint(row.worldMatrix, 0, 0);
-    let worldRotation = getRotationFromMatrix(row.worldMatrix)
-    let worldScale = getScaleFromMatrix(row.worldMatrix)
-
-    // worldRotation = row.rotation;
-    cmesh.position.set(worldPos.x, worldPos.y, 0);
-    cmesh.rotation.z = worldRotation;
-    cmesh.scale.set(worldScale.x, worldScale.y, 1);
-
-
-
-    // console.log(m3.elements);
-
-    // const te = m3.elements;
-    // const positionX = te[6];
-    // const positionY = te[7];
-
-    // // Column 1 (X basis)
-    // const scaleX = Math.sqrt(te[0] * te[0] + te[1] * te[1]);
-    // // Column 2 (Y basis)
-    // const scaleY = Math.sqrt(te[3] * te[3] + te[4] * te[4]);
-
-    // // let mt = new THREE.Matrix4().setPosition(new THREE.Vector3(5,4,7))
-    // let mt = new THREE.Matrix4().set(
-    //    1,   0,   0,   1, // x
-    //    0,   1,   0,   0, // y
-    //    0,   0,   1,   0, // z
-    //    0,   0,   0,   1 
-    // )
-
-    // console.log("mt.elements")
-    // console.log(mt.elements)
-
-    // const elements = m3.elements; // [a, b, 0, c, d, 0, tx, ty, 1]
-    // const m4_manual = new THREE.Matrix4().set(
-    //   elements[0], elements[3], 0, elements[2],   // column 0: a, c, 0, tx
-    //   elements[1], elements[4], 0, elements[7],   // column 1: b, d, 0, ty
-    //   0,           0,           1, 0,             // column 2: Z axis (identity)
-    //   0,           0,           0, 1              // column 3: homogeneous
-    // );
-    // // cmesh.applyMatrix4(m4_manual);
-    // console.log(m4_manual.elements);
-    // cmesh.matrix.copy(m4_manual);
-    // cmesh.matrix.copy(mt);
-
-    // const m4 = new THREE.Matrix4().setFromMatrix3(matrix);
-    // const m4 = new THREE.Matrix4().setFromMatrix3(m3);
-    // m4.setFromMatrix3(m3);
-    // console.log(m4.elements);
-    // mesh.matrix.copy(myMatrix);    // Manually set the matrix
-    // cmesh.applyMatrix4(m4);
-    // cmesh.matrix.copy(m4);
-    // cmesh.applyMatrix4(m4);
-    // console.log(cmesh.matrix);
-    // cmesh.position.set(0,1,0)
+    update_model2d(cmesh, row);
   }
   scene.add(cmesh)
 }
@@ -367,35 +338,8 @@ function onUpdate_Transfrom2D(_ctx, oldRow, newRow){
   const cmesh = scene.children.find(r=>r.userData?.row?.entityId == newRow.entityId);
   if(cmesh){
     if(newRow.worldMatrix){
-      console.log(newRow.worldMatrix)
-
-
-      const worldPos = transformPoint(newRow.worldMatrix, 0, 0);
-      let worldRotation = getRotationFromMatrix(newRow.worldMatrix)
-      let worldScale = getScaleFromMatrix(newRow.worldMatrix)
-
-      // worldRotation = row.rotation;
-      cmesh.position.set(worldPos.x, worldPos.y, 0);
-      cmesh.rotation.z = worldRotation;
-      cmesh.scale.set(worldScale.x, worldScale.y, 1);
-
-      // const m3 = new THREE.Matrix3().fromArray(newRow.worldMatrix);
-      // m3.transpose();
-      // const m4 = new THREE.Matrix4().setFromMatrix3(m3);
-      // console.log(m4.elements);
-      // matrix.fromArray(newRow.worldMatrix);
-      // const m4 = new THREE.Matrix4().setFromMatrix3(matrix);
-      // mesh.matrix.copy(myMatrix);    // Manually set the matrix
-      // console.log(m4);
-      // cmesh.applyMatrix4(m4);
-      // cmesh.matrix.copy(m4);
-      // console.log(cmesh.position)
-      
-      // m4.decompose(cmesh.position, cmesh.quaternion, cmesh.scale);
-
-      // cmesh.applyMatrix4(m4);
-      // cmesh.matrix.copy(m4);
-      // cmesh.updateMatrix();
+      // console.log(newRow.worldMatrix)
+      update_model2d(cmesh, newRow);
     }
   }
 }
@@ -407,6 +351,8 @@ function delete_model2D(ctx, row){
       break;
     }
   }
+  PARAMS.transform2d=PARAMS.transform2d.filter(r=>r.entityId!=row.entityId)
+
 }
 
 function setupDBTransform2D(){
@@ -416,13 +362,9 @@ function setupDBTransform2D(){
   conn.db.transform2d.onUpdate(onUpdate_Transfrom2D)
   conn.db.transform2d.onDelete(delete_model2D)
 }
-
-
 //-----------------------------------------------
 // 
 //-----------------------------------------------
-
-
 function App(){
   return div(
     div(
@@ -489,16 +431,17 @@ function onResize(){
 
 function update_select_marker(){
   if(marker){
-    const transform = PARAMS.transform3d.find(e => e.entityId === PARAMS.entityId);
-    if(transform){
+    const transform3d = PARAMS.transform3d.find(e => e.entityId === PARAMS.entityId);
+    const transform2d = PARAMS.transform2d.find(e => e.entityId === PARAMS.entityId);
+    if(transform3d){
       // marker.position.set(
       //   transform.localPosition.x,
       //   transform.localPosition.y,
       //   transform.localPosition.z
       // )
       const matrix = new THREE.Matrix4();
-      if(transform.worldMatrix){
-        matrix.fromArray(transform.worldMatrix);
+      if(transform3d.worldMatrix){
+        matrix.fromArray(transform3d.worldMatrix);
         const position = new THREE.Vector3();
         position.setFromMatrixPosition(matrix);
         marker.position.set(
@@ -507,6 +450,16 @@ function update_select_marker(){
           position.z
         )
       }
+      marker.visible = true;
+    } else if(transform2d){
+      const worldPos = transformPoint(transform2d.worldMatrix, 0, 0);
+      let worldRotation = getRotationFromMatrix(transform2d.worldMatrix)
+      let worldScale = getScaleFromMatrix(transform2d.worldMatrix)
+
+      // worldRotation = row.rotation;
+      marker.position.set(worldPos.x, worldPos.y, 0);
+      marker.rotation.z = worldRotation;
+      // marker.scale.set(worldScale.x, worldScale.y, 1);
       marker.visible = true;
     }else{
       marker.visible = false;
@@ -593,31 +546,62 @@ function selectEntity(id){
 
   // console.log(entity);
   transform3DPropsFolder.disabled = true;
-  const transform = PARAMS.transform3d.find(e => e.entityId === id);
-  if(!transform) return;
-  // console.log(transform);
-  PARAMS.t_position.x = transform.localPosition.x;
-  PARAMS.t_position.y = transform.localPosition.y;
-  PARAMS.t_position.z = transform.localPosition.z;
-  if(positionBinding) positionBinding.refresh();
+  const transform3d = PARAMS.transform3d.find(e => e.entityId === id);
+  if(transform3d){
+    // console.log(transform);
+    PARAMS.t_position.x = transform.localPosition.x;
+    PARAMS.t_position.y = transform.localPosition.y;
+    PARAMS.t_position.z = transform.localPosition.z;
+    if(positionBinding) positionBinding.refresh();
 
-  // console.log(transform?.localQuaternion);
-  let quat = new THREE.Quaternion(transform.localQuaternion.x,transform.localQuaternion.y,transform.localQuaternion.z,transform.localQuaternion.w);
-  const euler = new THREE.Euler().setFromQuaternion(quat, 'XYZ');
-  // console.log(euler);
-  PARAMS.t_rotation.x = THREE.MathUtils.radToDeg(euler.x);
-  PARAMS.t_rotation.y = THREE.MathUtils.radToDeg(euler.y);
-  PARAMS.t_rotation.z = THREE.MathUtils.radToDeg(euler.z);
-  // console.log(PARAMS.t_rotation);
-  if(rotationBinding) rotationBinding.refresh();
-  PARAMS.t_scale.x = transform.localScale.x;
-  PARAMS.t_scale.y = transform.localScale.y;
-  PARAMS.t_scale.z = transform.localScale.z;
-  if(scaleBinding) scaleBinding.refresh();
-  transform3DPropsFolder.disabled = false;
-  removeTransform3DBinding.disabled = false;
-  addTransform3DBinding.disabled = true;
-  if(typeof update_transform3d_parent == 'function') update_transform3d_parent();
+    // console.log(transform?.localQuaternion);
+    let quat = new THREE.Quaternion(transform.localQuaternion.x,transform.localQuaternion.y,transform.localQuaternion.z,transform.localQuaternion.w);
+    const euler = new THREE.Euler().setFromQuaternion(quat, 'XYZ');
+    // console.log(euler);
+    PARAMS.t_rotation.x = THREE.MathUtils.radToDeg(euler.x);
+    PARAMS.t_rotation.y = THREE.MathUtils.radToDeg(euler.y);
+    PARAMS.t_rotation.z = THREE.MathUtils.radToDeg(euler.z);
+    // console.log(PARAMS.t_rotation);
+    if(rotationBinding) rotationBinding.refresh();
+    PARAMS.t_scale.x = transform.localScale.x;
+    PARAMS.t_scale.y = transform.localScale.y;
+    PARAMS.t_scale.z = transform.localScale.z;
+    if(scaleBinding) scaleBinding.refresh();
+    transform3DPropsFolder.disabled = false;
+    removeTransform3DBinding.disabled = false;
+    addTransform3DBinding.disabled = true;
+    if(typeof update_transform3d_parent == 'function') update_transform3d_parent();
+  }else{
+    transform3DPropsFolder.disabled = true;
+  }
+
+  const _transform2d = PARAMS.transform2d.find(e => e.entityId === id);
+  if(_transform2d){
+    const worldPos = transformPoint(_transform2d.worldMatrix, 0, 0);
+    let worldRotation = getRotationFromMatrix(_transform2d.worldMatrix)
+    let worldScale = getScaleFromMatrix(_transform2d.worldMatrix)
+
+    // mesh.position.set(worldPos.x, worldPos.y, 0);
+    // mesh.rotation.z = worldRotation;
+    // mesh.scale.set(worldScale.x, worldScale.y, 1);
+
+    PARAMS.t2_position.x = worldPos.x;
+    PARAMS.t2_position.y = worldPos.y;
+
+    PARAMS.t2_rotation = radiansToDegree(worldRotation);
+
+    PARAMS.t2_scale.x = worldScale.x;
+    PARAMS.t2_scale.y = worldScale.y;
+    if(position2DBinding) position2DBinding.refresh()
+    if(rotation2DBinding) rotation2DBinding.refresh()
+    if(scale2DBinding) scale2DBinding.refresh()
+    if(addTransform2DBinding)addTransform2DBinding.disabled = true;
+    if(removeTransform2DBinding)removeTransform2DBinding.disabled = false;
+
+  }else{
+    if(addTransform2DBinding)addTransform2DBinding.disabled = false;
+    if(removeTransform2DBinding)removeTransform2DBinding.disabled = true;
+  }
 }
 
 update_entities_list();
@@ -808,38 +792,42 @@ testFolder.addButton({title:'set all transform null test'}).on('click',()=>{
   conn.reducers.updateAllTransform3DsNull();
 })
 //-----------------------------------------------
-// 
+// TRANSFORM 2D
 //-----------------------------------------------
 let transform2DFolder = pane.addFolder({
   title: 'Transform 2D',
 });
-transform2DFolder.addButton({title:'Add Transform 2D'}).on('click',()=>{
+addTransform2DBinding = transform2DFolder.addButton({title:'Add Transform 2D'}).on('click',()=>{
   conn.reducers.addEntityTransform2D({
     entityId:PARAMS.entityId
   });
 })
-transform2DFolder.addButton({title:'Remove Transform 2D'})
+removeTransform2DBinding = transform2DFolder.addButton({title:'Remove Transform 2D'}).on('click',()=>{
+  conn.reducers.removeEntityTransform2D({
+    entityId:PARAMS.entityId
+  });
+})
 transform2DFolder.addButton({title:'Transform 2D Log'})
 
 let transform2DPropsFolder = pane.addFolder({
   title: 'Transform 2D Props',
 });
 
-transform2DPropsFolder.addBinding(PARAMS, 't2_position').on('change',()=>{
-  console.log("change position")
+position2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_position').on('change',()=>{
+  // console.log("change position")
   conn.reducers.setTransform2DPosition({
     entityId:PARAMS.entityId,
     x:PARAMS.t2_position.x,
     y:PARAMS.t2_position.y
   });
 })
-transform2DPropsFolder.addBinding(PARAMS, 't2_rotation').on('change',()=>{
+rotation2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_rotation').on('change',()=>{
   conn.reducers.setTransform2DRotation({
     entityId:PARAMS.entityId,
     rotation: degreeToRadians(PARAMS.t2_rotation)
   })
 })
-transform2DPropsFolder.addBinding(PARAMS, 't2_scale').on('change',()=>{
+scale2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_scale').on('change',()=>{
   conn.reducers.setTransform2DScale({
     entityId:PARAMS.entityId,
     x:PARAMS.t2_scale.x,
