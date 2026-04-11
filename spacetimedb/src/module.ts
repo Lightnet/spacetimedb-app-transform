@@ -3,14 +3,14 @@
 //-----------------------------------------------
 import { schema, table, t, SenderError  } from 'spacetimedb/server';
 import { sessions } from './tables/table_session';
-import { user, userAuth } from './tables/table_user';
+import { users, userAuth } from './tables/table_user';
 import { entity, transform3d } from './tables/table_entity';
 //-----------------------------------------------
 // SCEHEMA
 //-----------------------------------------------
 const spacetimedb = schema({
   sessions,
-  user,
+  users,
   userAuth,
   entity,
   transform3d,
@@ -27,11 +27,8 @@ export const init = spacetimedb.init(_ctx => {
 export const onConnect = spacetimedb.clientConnected(ctx => {
   // ctx.connectionId is guaranteed to be defined
   const connId = ctx.connectionId!;
-
-  console.log(ctx.newUuidV7().toString())
-
-  ctx.timestamp
-  
+  // console.log(ctx.newUuidV7().toString())
+  // ctx.timestamp;
   // Initialize client session
   ctx.db.sessions.insert({
     connection_id: connId,
@@ -58,30 +55,30 @@ export const onConnect = spacetimedb.clientConnected(ctx => {
 //-----------------------------------------------
 export const onDisconnect = spacetimedb.clientDisconnected(ctx => {
   const connId = ctx.connectionId!;
-
   const session = ctx.db.sessions.connection_id.find(connId);
-
   if(session){
     if(session.userId){
-      const _user = ctx.db.user.id.find(session.userId)
+      const _user = ctx.db.users.id.find(session.userId)
       if(_user){
 
         const _userAuth = ctx.db.userAuth.userId.find(session.userId);
         if(_userAuth){
           //remove identity token in case someone use same token
           _userAuth.identity = undefined;
-
           _user.online = false;
           _user.identity = undefined;
         }
       }
     }
   }
-
   // ctx.connectionId is guaranteed to be defined
   // Clean up client session
   ctx.db.sessions.connection_id.delete(connId);
-
 });
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export default spacetimedb;
+//-----------------------------------------------
+// 
+//-----------------------------------------------

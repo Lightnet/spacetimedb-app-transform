@@ -435,11 +435,18 @@ const update_transform3d_parent = function (){
     }
   }
 
+  let parentId = "";
+
+  const transform = PARAMS.transform3d.find(r=>r.entityId==PARAMS.entityId);
+  if(transform){
+    parentId = transform.parentId;
+  }
+
   hierarchyListBinding = hierarchyFolder.addBlade({
     view: 'list',
     label: 'Parent:',
     options: parentEntities,
-    value: '',
+    value: parentId,
   }).on('change',(event)=>{
     // selectEntity(event.value)
     // console.log(event.value);

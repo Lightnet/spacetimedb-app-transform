@@ -1,9 +1,12 @@
-
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 import { table, t, SenderError } from 'spacetimedb/server';
 import spacetimedb from '../module';
 import { validateName } from '../helper';
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export const auth_login = spacetimedb.reducer(
   { alias: t.string(), pass: t.string() }, (ctx, { alias, pass }) => {
   console.log("alias", alias);
@@ -15,21 +18,21 @@ export const auth_login = spacetimedb.reducer(
     throw new SenderError('Does not exist user!');
   }
 
-  const _user = ctx.db.user.id.find(_userAuth.userId)
+  const _user = ctx.db.users.id.find(_userAuth.userId)
   if(_user){
     _user.online=true;
     _user.identity = ctx.identity;
-    ctx.db.user.id.update(_user)
+    ctx.db.users.id.update(_user)
 
     _userAuth.identity = ctx.identity;
     ctx.db.userAuth.userId.update(_userAuth)
     console.log("update user");
   }
-  
-
   // ctx.db.user.id.update({ ...user, name:alias });
 });
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export const auth_register = spacetimedb.reducer(
   { alias: t.string(), pass: t.string() }, (ctx, { alias, pass }) => {
   console.log("alias", alias);
@@ -43,7 +46,7 @@ export const auth_register = spacetimedb.reducer(
     throw new SenderError("User Exist!");
   }else{
     console.log("create user!");
-    const uuid = ctx.newUuidV7();
+    const uuid = ctx.newUuidV7().toString();
 
     ctx.db.userAuth.insert({
       identity: ctx.identity,
@@ -53,7 +56,7 @@ export const auth_register = spacetimedb.reducer(
       pass: pass
     });
 
-    ctx.db.user.insert({
+    ctx.db.users.insert({
       identity: ctx.identity,
       name: alias,
       id: uuid,
@@ -62,8 +65,9 @@ export const auth_register = spacetimedb.reducer(
   }
 
 });
-
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export const auth_logout = spacetimedb.reducer(
   { alias: t.string(), pass: t.string() }, (ctx, { alias, pass }) => {
   console.log("alias", alias);
@@ -78,12 +82,12 @@ export const auth_logout = spacetimedb.reducer(
   console.log("_userAuth: ", _userAuth)
 
   if(_userAuth){
-    const _user = ctx.db.user.id.find(_userAuth.userId);
+    const _user = ctx.db.users.id.find(_userAuth.userId);
     if(_user){
       // remove identity token
       _user.identity = undefined;
       _user.online = false;
-      ctx.db.user.id.update(_user)
+      ctx.db.users.id.update(_user)
       _userAuth.identity = undefined;
       ctx.db.userAuth.userId.update(_userAuth)
     }

@@ -1,5 +1,6 @@
+//-----------------------------------------------
 // main
-
+//-----------------------------------------------
 import spacetimedb, {init , onConnect, onDisconnect} from './module';
 
 // import { set_name } from './reducers/reducer_user'
@@ -12,7 +13,9 @@ export * from './views/view_user'
 export * from './reducers/reducer_auth';
 export * from './reducers/reducer_test'; // export all functions
 export * from './reducers/reducer_entity';
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export {
   // spacetimedb predefine
   init,
@@ -25,5 +28,7 @@ export {
   // test
   // test_foo
 }
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export default spacetimedb;

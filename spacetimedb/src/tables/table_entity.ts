@@ -1,7 +1,11 @@
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 import { table, t } from 'spacetimedb/server';
 import { Coordinates, Quaternion, SVector2 } from '../types';
-// import { status } from '../types';
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export const entity = table(
   { 
     name: 'entity', 
@@ -11,7 +15,9 @@ export const entity = table(
     id: t.string().primaryKey(),
   }
 );
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export const transform3d = table(
   { 
     name: 'transform3d', 
@@ -28,7 +34,9 @@ export const transform3d = table(
     worldMatrix: t.array(t.f32()).optional(),
   }
 );
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 // work in progress
 export const transform2d = table(
   { 
@@ -46,3 +54,6 @@ export const transform2d = table(
     worldMatrix: t.array(t.f32()).optional(),
   }
 );
+//-----------------------------------------------
+// 
+//-----------------------------------------------

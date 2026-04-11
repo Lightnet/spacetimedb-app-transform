@@ -1,8 +1,10 @@
+//-----------------------------------------------
 // Model tables
-
+//-----------------------------------------------
 import { table, t } from 'spacetimedb/server';
-// import { status } from '../types';
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export const sessions = table(
   { 
     name: 'sessions', 
@@ -12,6 +14,6 @@ export const sessions = table(
     identity: t.identity().primaryKey(),
     connection_id: t.connectionId().unique(),
     connected_at: t.timestamp(),
-    userId:t.uuid().optional(),
+    userId:t.string().optional(),
   }
 );
