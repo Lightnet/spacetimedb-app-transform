@@ -24,37 +24,27 @@ const board = new MessageBoard({top: "20px"})
 function degreeToRadians(degrees) {
   return degrees * (Math.PI / 180);
 }
-
 function radiansToDegree(radians) {
   return radians * (180 / Math.PI);
 }
-
-
-
 // Matrix is now stored as a flat array: [a, b, c, d, e, f, 0, 0, 1]  (row-major, 3x3)
 // type Matrix2D = [number, number, number, number, number, number, number, number, number];
-
 const Matrix2D = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-
 function translate2D(x, y) {
   return [1, 0, x, 0, 1, y, 0, 0, 1];
 }
-
 function rotate2D(angleDeg) {
   const rad = angleDeg * Math.PI / 180;
   const c = Math.cos(rad);
   const s = Math.sin(rad);
   return [c, -s, 0, s, c, 0, 0, 0, 1];
 }
-
 function scale2D(sx, sy) {
   return [sx, 0, 0, 0, sy, 0, 0, 0, 1];
 }
-
 // Matrix multiplication: C = A * B  (row-major)
 function multiply2D(a, b){
   const r = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-
   for (let i = 0; i < 3; i++) {
     for (let j = 0; j < 3; j++) {
       for (let k = 0; k < 3; k++) {
@@ -64,35 +54,29 @@ function multiply2D(a, b){
   }
   return r;
 }
-
-function transformPoint(m, x, y) {
+function transformPoint2D(m, x, y) {
   return {
     x: m[0]*x + m[1]*y + m[2],
     y: m[3]*x + m[4]*y + m[5]
   };
 }
-
 /**
  * Extracts rotation angle in degrees from a 2D affine matrix (flattened 3x3).
  * Works even with scaling and translation present.
  */
-function getRotationFromMatrix(m) {
+function getRotationFromMatrix2D(m) {
   // Linear part: [ m[0]  m[1] ]
   //               [ m[3]  m[4] ]
-
   // Use atan2 on the Y-axis vector after transform (more stable)
   const angleRad = Math.atan2(m[3], m[0]);   // sin / cos from first column
-
   return angleRad * (180 / Math.PI);
 }
-
 /**
  * Extract average scale from the 2D world matrix
  */
-function getScaleFromMatrix(m) {
+function getScaleFromMatrix2D(m) {
   const scaleX = Math.hypot(m[0], m[3]);   // length of transformed X axis
   const scaleY = Math.hypot(m[1], m[4]);   // length of transformed Y axis
-
   return { x: scaleX, y: scaleY };
 }
 
@@ -105,10 +89,9 @@ let entityLogBinding;
 let addTransform3DBinding;
 let removeTransform3DBinding;
 let deleteEntityBinding;
-let hierarchyListBinding;
+let hierarchy3DParentBinding;
 let hierarchyFolder;
 let marker;
-
 
 let addTransform2DBinding;
 let removeTransform2DBinding;
@@ -116,6 +99,7 @@ let removeTransform2DBinding;
 let position2DBinding;
 let rotation2DBinding;
 let scale2DBinding;
+let hierarchyParentBinding;
 
 
 const PARAMS = {
@@ -290,9 +274,6 @@ function setupDBTransform3D(){
 function create_2d(){
   let size = 1
   const geometry = new THREE.PlaneGeometry(size, size);
-  // const material = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-  // const mesh = new THREE.Mesh(geometry, material);
-
   const edges = new THREE.EdgesGeometry(geometry);
   const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
   const mesh = new THREE.LineSegments(edges, lineMaterial);
@@ -301,13 +282,12 @@ function create_2d(){
 }
 
 function update_model2d(mesh, row){
-  const worldPos = transformPoint(row.worldMatrix, 0, 0);
-  let worldRotation = getRotationFromMatrix(row.worldMatrix)
-  let worldScale = getScaleFromMatrix(row.worldMatrix)
-
+  const worldPos = transformPoint2D(row.worldMatrix, 0, 0);
+  let worldScale = getScaleFromMatrix2D(row.worldMatrix)
   // worldRotation = row.rotation;
   mesh.position.set(worldPos.x, worldPos.y, 0);
-  mesh.rotation.z = worldRotation;
+  const worldRot = getRotationFromMatrix2D(row.worldMatrix);
+  mesh.rotation.z = worldRot * (Math.PI / 180);
   mesh.scale.set(worldScale.x, worldScale.y, 1);
 }
 
@@ -452,9 +432,9 @@ function update_select_marker(){
       }
       marker.visible = true;
     } else if(transform2d){
-      const worldPos = transformPoint(transform2d.worldMatrix, 0, 0);
-      let worldRotation = getRotationFromMatrix(transform2d.worldMatrix)
-      let worldScale = getScaleFromMatrix(transform2d.worldMatrix)
+      const worldPos = transformPoint2D(transform2d.worldMatrix, 0, 0);
+      let worldRotation = getRotationFromMatrix2D(transform2d.worldMatrix)
+      // let worldScale = getScaleFromMatrix2D(transform2d.worldMatrix)
 
       // worldRotation = row.rotation;
       marker.position.set(worldPos.x, worldPos.y, 0);
@@ -549,13 +529,13 @@ function selectEntity(id){
   const transform3d = PARAMS.transform3d.find(e => e.entityId === id);
   if(transform3d){
     // console.log(transform);
-    PARAMS.t_position.x = transform.localPosition.x;
-    PARAMS.t_position.y = transform.localPosition.y;
-    PARAMS.t_position.z = transform.localPosition.z;
+    PARAMS.t_position.x = transform3d.localPosition.x;
+    PARAMS.t_position.y = transform3d.localPosition.y;
+    PARAMS.t_position.z = transform3d.localPosition.z;
     if(positionBinding) positionBinding.refresh();
 
     // console.log(transform?.localQuaternion);
-    let quat = new THREE.Quaternion(transform.localQuaternion.x,transform.localQuaternion.y,transform.localQuaternion.z,transform.localQuaternion.w);
+    let quat = new THREE.Quaternion(transform3d.localQuaternion.x,transform3d.localQuaternion.y,transform3d.localQuaternion.z,transform3d.localQuaternion.w);
     const euler = new THREE.Euler().setFromQuaternion(quat, 'XYZ');
     // console.log(euler);
     PARAMS.t_rotation.x = THREE.MathUtils.radToDeg(euler.x);
@@ -563,9 +543,9 @@ function selectEntity(id){
     PARAMS.t_rotation.z = THREE.MathUtils.radToDeg(euler.z);
     // console.log(PARAMS.t_rotation);
     if(rotationBinding) rotationBinding.refresh();
-    PARAMS.t_scale.x = transform.localScale.x;
-    PARAMS.t_scale.y = transform.localScale.y;
-    PARAMS.t_scale.z = transform.localScale.z;
+    PARAMS.t_scale.x = transform3d.localScale.x;
+    PARAMS.t_scale.y = transform3d.localScale.y;
+    PARAMS.t_scale.z = transform3d.localScale.z;
     if(scaleBinding) scaleBinding.refresh();
     transform3DPropsFolder.disabled = false;
     removeTransform3DBinding.disabled = false;
@@ -577,9 +557,9 @@ function selectEntity(id){
 
   const _transform2d = PARAMS.transform2d.find(e => e.entityId === id);
   if(_transform2d){
-    const worldPos = transformPoint(_transform2d.worldMatrix, 0, 0);
-    let worldRotation = getRotationFromMatrix(_transform2d.worldMatrix)
-    let worldScale = getScaleFromMatrix(_transform2d.worldMatrix)
+    const worldPos = transformPoint2D(_transform2d.worldMatrix, 0, 0);
+    let worldRotation = getRotationFromMatrix2D(_transform2d.worldMatrix)
+    let worldScale = getScaleFromMatrix2D(_transform2d.worldMatrix)
 
     // mesh.position.set(worldPos.x, worldPos.y, 0);
     // mesh.rotation.z = worldRotation;
@@ -613,7 +593,7 @@ hierarchyFolder = pane.addFolder({
   title: 'Transform 3D Hierarchy',
 });
 
-hierarchyListBinding = hierarchyFolder.addBlade({
+hierarchy3DParentBinding = hierarchyFolder.addBlade({
   view: 'list',
   label: 'Parent:',
   options: [
@@ -626,13 +606,8 @@ hierarchyListBinding = hierarchyFolder.addBlade({
   // PARAMS.entityId = event.value;
 });
 
-console.log("typeof hierarchyListBinding")
-console.log(typeof hierarchyListBinding)
-
 const update_transform3d_parent = function (){
-  // console.log(hierarchyListBinding);
-  // if(!hierarchyListBinding) return;
-  if(hierarchyListBinding) hierarchyListBinding.dispose();
+  if(hierarchy3DParentBinding) hierarchy3DParentBinding.dispose();
 
   let parentEntities = []
   parentEntities.push({text:"None", value:""})
@@ -651,7 +626,7 @@ const update_transform3d_parent = function (){
     parentId = transform.parentId;
   }
 
-  hierarchyListBinding = hierarchyFolder.addBlade({
+  hierarchy3DParentBinding = hierarchyFolder.addBlade({
     view: 'list',
     label: 'Parent:',
     options: parentEntities,
@@ -775,22 +750,6 @@ scaleBinding = transform3DPropsFolder.addBinding(PARAMS, 't_scale',{label:'Scale
     conn.reducers.updateAllTransform3Ds();
   }
 });
-
-const testFolder = pane.addFolder({
-  title: 'Test',
-});
-
-testFolder.addButton({title:'transform list'}).on('click',()=>{
-  console.log(PARAMS.transform3d);
-})
-
-testFolder.addButton({title:'update all transform test'}).on('click',()=>{
-  conn.reducers.updateAllTransform3Ds();
-})
-
-testFolder.addButton({title:'set all transform null test'}).on('click',()=>{
-  conn.reducers.updateAllTransform3DsNull();
-})
 //-----------------------------------------------
 // TRANSFORM 2D
 //-----------------------------------------------
@@ -809,11 +768,72 @@ removeTransform2DBinding = transform2DFolder.addButton({title:'Remove Transform 
 })
 transform2DFolder.addButton({title:'Transform 2D Log'})
 
+let t2dhierarchyFolder = pane.addFolder({
+  title: 'Transform 2D Hierarchy',
+});
+t2dhierarchyFolder.addButton({title:'Refresh'}).on('click',()=>{
+  update_hierarchy_parent();
+})
+
+hierarchyParentBinding = t2dhierarchyFolder.addBlade({
+  view: 'list',
+  label: 'Parent:',
+  options: [
+    {text:"None", value:""}
+  ],
+  value: '',
+}).on('change',(event)=>{
+  // selectEntity2D(event.value)
+  console.log(event.value);
+  // PARAMS.entityId = event.value;
+});
+
+function update_hierarchy_parent(){
+  if(hierarchyParentBinding) hierarchyParentBinding.dispose();
+  console.log(PARAMS.transform2d);
+  let parentOptions = [];
+  let parentId = "";
+
+  parentOptions.push({
+    text:"None", value:""
+  });
+  const t2d = PARAMS.transform2d.find(r=>r.entityId == PARAMS.entityId);
+  if(t2d){
+    if(t2d.parentId != ""){
+      parentId = t2d.parentId;
+    }
+  }
+
+  for(const entity of PARAMS.entities){
+    if(entity.id != PARAMS.entityId){
+      parentOptions.push({
+        text:entity.id, value:entity.id
+      });
+    }
+  }
+
+  hierarchyParentBinding = t2dhierarchyFolder.addBlade({
+    view: 'list',
+    label: 'Parent:',
+    options:parentOptions,
+    value: parentId,
+  }).on('change',(event)=>{
+    // selectEntity2D(event.value)
+    console.log(event.value);
+    // PARAMS.entityId = event.value;
+    conn.reducers.setTransform2DParent({
+      entityId:PARAMS.entityId,
+      parentId:event.value
+    })
+  });
+}
+
+
 let transform2DPropsFolder = pane.addFolder({
   title: 'Transform 2D Props',
 });
 
-position2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_position').on('change',()=>{
+position2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_position',{label:'Position'}).on('change',()=>{
   // console.log("change position")
   conn.reducers.setTransform2DPosition({
     entityId:PARAMS.entityId,
@@ -821,18 +841,42 @@ position2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_position').on(
     y:PARAMS.t2_position.y
   });
 })
-rotation2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_rotation').on('change',()=>{
+rotation2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_rotation',{label:'Rotation'}).on('change',()=>{
   conn.reducers.setTransform2DRotation({
     entityId:PARAMS.entityId,
-    rotation: degreeToRadians(PARAMS.t2_rotation)
+    // rotation: degreeToRadians(PARAMS.t2_rotation)
+    rotation: PARAMS.t2_rotation
   })
 })
-scale2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_scale').on('change',()=>{
+scale2DBinding = transform2DPropsFolder.addBinding(PARAMS, 't2_scale',{label:'Scale'}).on('change',()=>{
   conn.reducers.setTransform2DScale({
     entityId:PARAMS.entityId,
     x:PARAMS.t2_scale.x,
     y:PARAMS.t2_scale.y
   })
+})
+//-----------------------------------------------
+// 
+//-----------------------------------------------
+const testFolder = pane.addFolder({
+  title: 'Test',
+});
+
+testFolder.addButton({title:'transform list'}).on('click',()=>{
+  console.log(PARAMS.transform3d);
+})
+
+testFolder.addButton({title:'update all transform test'}).on('click',()=>{
+  conn.reducers.updateAllTransform3Ds();
+})
+
+testFolder.addButton({title:'set all transform null test'}).on('click',()=>{
+  conn.reducers.updateAllTransform3DsNull();
+})
+
+testFolder.addButton({title:'clear transforms'}).on('click',()=>{
+  conn.reducers.clearAllTransform2Ds();
+  conn.reducers.clearAllTransform3Ds();
 })
 
 // pane.addButton({title:'Login'}).on('click',()=>{

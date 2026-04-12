@@ -4,7 +4,9 @@
 import { schema, table, t, SenderError  } from 'spacetimedb/server';
 import { sessions } from './tables/table_session';
 import { users, userAuth } from './tables/table_user';
-import { entity, transform2d, transform3d } from './tables/table_entity';
+import { entity} from './tables/table_entity';
+import { transform3d } from './tables/table_transform3d';
+import { transform2d } from './tables/table_transform2d';
 //-----------------------------------------------
 // SCEHEMA
 //-----------------------------------------------

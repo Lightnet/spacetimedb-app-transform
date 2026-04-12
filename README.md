@@ -2,18 +2,33 @@
 
 # License: MIT
 
+# Status:
+-  Work in progress.
+
 # SpaceTimeDB
  - 2.1.0
 
 # Information:
-  This is transform 3D hierarchy to test parent and child matrix for position, rotation and scale. Sample Test.
+  This is transform 2D and 3D hierarchy to test parent and child matrix for position, rotation and scale. Sample Test.
 
-  Transform2D work in progress build.
+## Transform 3D:
+  This is work in progress. 
 
-# Transform 3D Hierarchy:
-  With the help of Grok AI agent. To able to use three js matrix and helper to handle transform 3D hierarchy. To handle position, rotation, scale, matrix and relate to parent and child.
+## Transform 2D:
+- https://github.com/Lightnet/spacetimedb-app-transform2d
 
-  There are different way to handle transform hierarchy in client but in server side. It will be tricky as it need to follow SpaceTimeDB format to able to create, update and delete entity and matrix4. The reducer has one depth layer to child to query any more it would not work.
+  This split a part if just 2D world with three.js build project sample. The help of the Grok A.I agent to refine, check errors and code logics.
+
+  Almost all basic features of transform set and set handers.
+
+# Transform Hierarchy:
+  With the help of Grok AI agent. To able to use three js matrix and helper to handle transform hierarchy. To handle position, rotation, scale, matrix and relate to parent and child.
+
+  There are different way to handle transform hierarchy in client but in server side. It need to follow SpaceTimeDB format to able to create, update and delete entity and matrix. There are restriction on reducer api it can support one depth or stacking by child function call and anymore is not possible since to query any more it would not work if to update the table. As it mentioned there fail rollback in case of fail query.
+
+```ts
+ ctx.db.transform.entityId.update(transform)
+```
 
 - Schedule Tables
 - reducer (function for client to access)
@@ -26,32 +41,45 @@
 ![Screenshot of browser test](screenshots/transform3d20260410.png)
 
 # Editor:
-  Current testing the position, quaternion, scale to update for box transform 3d. Using the Tweakpane for debug sync from the SpaceTimeDB. Tweakpane required code how to setup and clean up and reuse ui.
+  Current testing the position, quaternion, scale to update for box transform 3d. Using the Tweakpane for debug sync from the SpaceTimeDB.
 
 ## Features:
-- [x] create entity
-- [x] delete entity and check for transform 3d to delete match id
-- [x] add transform 3d
-- [x] remove transform 3d
-- [x] select transform 3d
+- [x] entity
+  - [x] create entity
+  - [x] delete entity and check for transform 3d and 2d to delete match entity id
+- [x] transform 3d
+  - [x] add 
+  - [x] remove 
+- [x] transform 2d
+  - [x] add 
+  - [x] remove 
+  - [x] parent
+- [x] ui select transform 3d / 2d
   - [x] position
   - [x] rotation
   - [x] scale
-- [x] select entity display yellow marker if transform 3d is added.
-- [x] parent
-  - [x] using the reducer to update all transforms base on isDirty propagation.
+  - [x] parent
+    - [x] using the reducer to update all transforms base on isDirty propagation.
+- [x] select entity display yellow marker if transform 3d or 2d is added.
 - [x] demo three js transform 3d hierarchy stand alone test.
 
-# Server feature:
+# Server features:
+- [x] still need to test more
 - [x] transform 3D hierarchy
-  - [x] still need to test more
-  - [x] reducer
-  - [ ] schedule
+  - [ ] set / get transform3d (wip)
+  - [x] set / get position (wip)
+  - [x] set / get rotation (wip)
+  - [x] set / get scale (wip)
+  - [x] parnet to child update. 
 - [x] transform 2D hierarchy
-  - [x] position
-  - [x] rotation
-  - [x] scale
-  - [ ] parnet to child update.
+  - [x] set / get transform3d
+  - [x] set / get position
+  - [x] set / get rotation
+  - [x] set / get scale
+  - [x] parnet to child update.
+- [x] reducer
+  - update all transforms that has isDirty to update to propagation filter.
+- [ ] schedule
 
 # Config:
   Make sure the application database name match the server and client. Since using the ***spacetime dev*** command line to run development mode to watch and build.
@@ -112,7 +140,7 @@ spacetime publish --server local spacetime-app-transform --delete-data
 - Grok AI agent
 
 # Server:
- - Note due to reducer have limited child to one to query. If more child to sub child it will not update the table. As it did say in docs.
+ - Note due to reducer have limited function call child to one to query. If more child to sub child it will not update the table. As it did say in docs.
  
 ## Tables:
 ```ts
@@ -125,7 +153,8 @@ export const entity = table(
     id: t.string().primaryKey(),
   }
 );
-
+```
+```ts
 export const transform3d = table(
   { 
     name: 'transform3d', 
@@ -138,6 +167,24 @@ export const transform3d = table(
     localPosition: Coordinates,
     localQuaternion: Quaternion,
     localScale: Coordinates,
+    localMatrix: t.array(t.f32()).optional(),
+    worldMatrix: t.array(t.f32()).optional(),
+  }
+);
+```
+```ts
+export const transform2d = table(
+  { 
+    name: 'transform2d', 
+    public: true,
+  },
+  {
+    entityId: t.string().primaryKey(),
+    parentId: t.string().optional(),
+    isDirty:t.bool().default(true),
+    position: SVector2,
+    rotation: t.f32(),
+    scale: SVector2,
     localMatrix: t.array(t.f32()).optional(),
     worldMatrix: t.array(t.f32()).optional(),
   }
