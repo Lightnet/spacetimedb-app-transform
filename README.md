@@ -11,28 +11,30 @@
 # Information:
   This is transform 2D and 3D hierarchy to test parent and child matrix for position, rotation and scale. Sample Test.
 
+  With the help of Grok A.I agent to handle the transform hierarchy to make sure the math is working and render test display correctly.
+
 ## Transform 3D:
-  This is work in progress. 
+  The using the three.js to handle transform 3D hierarchy. Might need to work on the math function later to test.
 
 ## Transform 2D:
 - https://github.com/Lightnet/spacetimedb-app-transform2d
 
-  This split a part if just 2D world with three.js build project sample. The help of the Grok A.I agent to refine, check errors and code logics.
+  Made this project repo for stand alone for better testing. It can be use for place holder project sample.
 
   Almost all basic features of transform set and set handers.
 
 # Transform Hierarchy:
-  With the help of Grok AI agent. To able to use three js matrix and helper to handle transform hierarchy. To handle position, rotation, scale, matrix and relate to parent and child.
+  To able to use three.js matrix and helper to handle transform hierarchy for 3D. To handle position, rotation, scale, matrix and relate to parent and child.
 
-  There are different way to handle transform hierarchy in client but in server side. It need to follow SpaceTimeDB format to able to create, update and delete entity and matrix. There are restriction on reducer api it can support one depth or stacking by child function call and anymore is not possible since to query any more it would not work if to update the table. As it mentioned there fail rollback in case of fail query.
+  There are different way to handle transform hierarchy in client but in server side. It need to follow SpaceTimeDB format to able to create, update and delete entity and matrix. There are restriction on reducer api it can support one depth or stacking by child function call and anymore is not possible since to update query the table. As it mentioned there fail rollback in case of fail query.
 
 ```ts
  ctx.db.transform.entityId.update(transform)
 ```
 
-- Schedule Tables
-- reducer (function for client to access)
-- trigger event
+- [ ] Schedule Tables
+- [x] reducer (function for client to access)
+- [ ] trigger event
 
 ## refs:
 - https://spacetimedb.com/docs/databases/transactions-atomicity
@@ -66,17 +68,18 @@
 # Server features:
 - [x] still need to test more
 - [x] transform 3D hierarchy
-  - [ ] set / get transform3d (wip)
-  - [x] set / get position (wip)
-  - [x] set / get rotation (wip)
-  - [x] set / get scale (wip)
-  - [x] parnet to child update. 
+  - [x] set / get transform3d
+  - [x] set / get position 
+  - [x] set / get quaternion 
+  - [x] set / get rotation 
+  - [x] set / get scale
+  - [x] parent to child update. 
 - [x] transform 2D hierarchy
   - [x] set / get transform3d
   - [x] set / get position
   - [x] set / get rotation
   - [x] set / get scale
-  - [x] parnet to child update.
+  - [x] parent to child update.
 - [x] reducer
   - update all transforms that has isDirty to update to propagation filter.
 - [ ] schedule
@@ -164,9 +167,9 @@ export const transform3d = table(
     entityId: t.string().primaryKey(),
     parentId: t.string().optional(),
     isDirty:t.bool().default(true),
-    localPosition: Coordinates,
-    localQuaternion: Quaternion,
-    localScale: Coordinates,
+    position: Vect3,
+    quaternion: Quaternion,
+    scale: Vect3,
     localMatrix: t.array(t.f32()).optional(),
     worldMatrix: t.array(t.f32()).optional(),
   }
@@ -182,9 +185,9 @@ export const transform2d = table(
     entityId: t.string().primaryKey(),
     parentId: t.string().optional(),
     isDirty:t.bool().default(true),
-    position: SVector2,
+    position: Vect2,
     rotation: t.f32(),
-    scale: SVector2,
+    scale: Vect2,
     localMatrix: t.array(t.f32()).optional(),
     worldMatrix: t.array(t.f32()).optional(),
   }
