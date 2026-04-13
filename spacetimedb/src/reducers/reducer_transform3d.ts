@@ -1,12 +1,18 @@
 //-----------------------------------------------
 // REDUCER TRANSFORM 3D
 //-----------------------------------------------
-import { Euler } from 'three';
 import { t, SenderError } from 'spacetimedb/server';
 import spacetimedb from '../module';
-import { degreeToRadians } from '../helper';
-import * as THREE from 'three';
 import { Quaternion, Vect3 } from '../types';
+import { 
+  computeLocalMatrix, 
+  multiplyMatrices,
+  quaternionFromEulerXYZ, 
+} from '../helpers/helper_transform3d';
+import { 
+  type Mat4,
+} from '../types/types_transform3d';
+
 //-----------------------------------------------
 // ADD TRANSFORM 3D
 //-----------------------------------------------
@@ -47,8 +53,8 @@ export const add_entity_transform3d = spacetimedb.reducer(
       position: safePosition,
       quaternion: safeQuaternion,
       scale: safeScale,
-      localMatrix: localMat.elements as any,
-      worldMatrix: localMat.elements as any,   // roots start with local = world
+      localMatrix: localMat as any,
+      worldMatrix: localMat as any,   // roots start with local = world
       isDirty: true,
     });
 
@@ -89,58 +95,12 @@ export const transform3d_compute_local_matrix = spacetimedb.reducer(
   (ctx, { id }) => {
     const _transform3d = ctx.db.transform3d.entityId.find(id);
     if(_transform3d){
-      const mat = new THREE.Matrix4();
-      mat.compose(
-        new THREE.Vector3(_transform3d.position.x, _transform3d.position.y, _transform3d.position.z),
-        new THREE.Quaternion(
-          _transform3d.quaternion.x,
-          _transform3d.quaternion.y,
-          _transform3d.quaternion.z,
-          _transform3d.quaternion.w
-        ),
-        new THREE.Vector3(_transform3d.scale.x, _transform3d.scale.y, _transform3d.scale.z)
-      );
-      _transform3d.localMatrix = mat.elements;
-      ctx.db.transform3d.entityId.update(_transform3d)
+      let mat = computeLocalMatrix(_transform3d)
       // console.log(mat);
-      console.log(mat.elements);
+      _transform3d.localMatrix = mat;
+      ctx.db.transform3d.entityId.update(_transform3d)
     }
 });
-// Put this near the top of reducer_entity.ts, outside any reducer
-function computeLocalMatrix(transform: any): THREE.Matrix4 {
-  const mat = new THREE.Matrix4();
-  mat.compose(
-    new THREE.Vector3(
-      transform.position.x,
-      transform.position.y,
-      transform.position.z
-    ),
-    new THREE.Quaternion(
-      transform.quaternion.x,
-      transform.quaternion.y,
-      transform.quaternion.z,
-      transform.quaternion.w
-    ),
-    new THREE.Vector3(
-      transform.scale.x,
-      transform.scale.y,
-      transform.scale.z
-    )
-  );
-  return mat;
-}
-// function markSubtreeDirty(ctx: any, entityId: string) {
-//   const transform = ctx.db.transform3d.entityId.find(entityId);
-//   if (!transform) return;
-//   transform.isDirty = true;
-//   ctx.db.transform3d.entityId.update(transform);
-//   // Recursively mark all children dirty
-//   for (const child of ctx.db.transform3d.iter()) {
-//     if (child.parentId === entityId) {
-//       markSubtreeDirty(ctx, child.entityId);
-//     }
-//   }
-// }
 
 // Efficient BFS version - marks entire subtree dirty when parent changes
 function markSubtreeDirty(ctx: any, rootEntityId: string) {
@@ -232,7 +192,7 @@ export const update_all_transform3ds = spacetimedb.reducer((ctx) => {
   // Update in correct order
   let updatedCount = 0;
   for (const transform of sortedDirty) {
-    let worldMat: THREE.Matrix4;
+    let worldMat: Mat4;
 
     if (!transform.parentId || transform.parentId === "") {
       // Root transform
@@ -241,16 +201,20 @@ export const update_all_transform3ds = spacetimedb.reducer((ctx) => {
       // Child transform - use parent's worldMatrix (parent should already be updated)
       const parent = ctx.db.transform3d.entityId.find(transform.parentId);
       if (parent?.worldMatrix) {
-        const parentWorld = new THREE.Matrix4().fromArray(parent.worldMatrix);
+        // const parentWorld = new THREE.Matrix4().fromArray(parent.worldMatrix);
+        // const localMat = computeLocalMatrix(transform);
+        // worldMat = parentWorld.clone().multiply(localMat);
+        const parentWorld = parent.worldMatrix as Mat4;
         const localMat = computeLocalMatrix(transform);
-        worldMat = parentWorld.clone().multiply(localMat);
+        worldMat = multiplyMatrices(parentWorld, localMat);
+
       } else {
         worldMat = computeLocalMatrix(transform);
       }
     }
 
     // Write back
-    transform.worldMatrix = worldMat.elements as any;
+    transform.worldMatrix = worldMat as Mat4;
     transform.isDirty = false;
     ctx.db.transform3d.entityId.update(transform);
     updatedCount++;
@@ -282,45 +246,47 @@ export const set_transform3d_position = spacetimedb.reducer(
     transform.position.y = y;
     transform.position.z = z;
     let mat = computeLocalMatrix(transform)
-    transform.localMatrix = mat.elements;
+    transform.localMatrix = mat;
     transform.isDirty = true; // need to update if there children
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update
     console.log(transform.position)
     ctx.db.transform3d.entityId.update(transform)
   }
 });
+
 //-----------------------------------------------
-// SET TRANSFORM 3D LOCAL ROTATION DEGREE
+// SET TRANSFORM 3D LOCAL ROTATION (Euler XYZ in Degrees)
 //-----------------------------------------------
-// option using the ui editor degree to radian.
 export const set_transform3d_rotation = spacetimedb.reducer(
-  { entityId: t.string(),x:t.f64(), y:t.f64(),z:t.f64()}, 
+  { entityId: t.string(), x: t.f64(), y: t.f64(), z: t.f64() },
   (ctx, { entityId, x, y, z }) => {
-  // console.log("ROTATION....");
-  const transform = ctx.db.transform3d.entityId.find(entityId);
-  if(transform){
-    let quat = new THREE.Quaternion();
-    quat.setFromEuler(
-      new Euler(
-        degreeToRadians(x),
-        degreeToRadians(y),
-        degreeToRadians(z)
-      )
-    )
-    // console.log("update rotation");
-    // console.log(quat);
-    // console.log("quat.x: ",quat.x);
+    const transform = ctx.db.transform3d.entityId.find(entityId);
+    if (!transform) return;
+
+    console.log(`Updating rotation (Euler XYZ degrees) for entity: ${entityId}`);
+
+    // Pure math quaternion from Euler XYZ degrees
+    const quat = quaternionFromEulerXYZ(x, y, z);
+
+    // Apply to stored quaternion
     transform.quaternion.x = quat.x;
     transform.quaternion.y = quat.y;
     transform.quaternion.z = quat.z;
     transform.quaternion.w = quat.w;
-    let mat = computeLocalMatrix(transform)
-    transform.localMatrix = mat.elements;
-    transform.isDirty = true; // need to update if there children
-    markSubtreeDirty(ctx, entityId);   // ← link transforms to update
+
+    // Recompute local matrix
+    const localMat = computeLocalMatrix(transform);
+    transform.localMatrix = localMat as any;   // or localMat (if you change type to number[])
+
+    // Mark dirty for hierarchy update
+    transform.isDirty = true;
+    markSubtreeDirty(ctx, entityId);
+
     ctx.db.transform3d.entityId.update(transform);
+
+    console.log(`Rotation updated successfully for ${entityId}`);
   }
-});
+);
 //-----------------------------------------------
 // SET TRANSFORM QUAT
 //-----------------------------------------------
@@ -335,7 +301,7 @@ export const set_transform3d_quaternion = spacetimedb.reducer(
     transform.quaternion.z = z;
     transform.quaternion.w = w;
     let mat = computeLocalMatrix(transform)
-    transform.localMatrix = mat.elements;
+    transform.localMatrix = mat;
     // console.log(transform.quaternion)
     transform.isDirty=true;
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update
@@ -355,7 +321,7 @@ export const set_transform3d_scale = spacetimedb.reducer(
     transform.scale.y = y;
     transform.scale.z = z;
     let mat = computeLocalMatrix(transform)
-    transform.localMatrix = mat.elements;
+    transform.localMatrix = mat;
     transform.isDirty = true; // need to update if there children
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update
     // console.log(transform.scale)

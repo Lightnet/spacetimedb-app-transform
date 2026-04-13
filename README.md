@@ -5,28 +5,33 @@
 # Status:
 -  Work in progress.
 
+# Program Languages:
+- Typescript ( server )
+- Javascript ( Client )
+
 # SpaceTimeDB
  - 2.1.0
 
 # Information:
-  This is transform 2D and 3D hierarchy to test parent and child matrix for position, rotation and scale. Sample Test.
+  This project use SpacetimeDB that has server module to handle transform 2D or 3D hierarchy. The transform 2D or 3D will query to update parent to child matrix for position, rotation and scale.
 
-  With the help of Grok A.I agent to handle the transform hierarchy to make sure the math is working and render test display correctly.
+  With the help of Grok A.I agent to handle the transform hierarchy matrix to make sure the math is working and render three.js test correctly.
 
 ## Transform 3D:
-  The using the three.js to handle transform 3D hierarchy. Might need to work on the math function later to test.
+  Worked and tested the three.js on server to make sure the matrix match the parent and child relate world position, rotate and scale. It was translate to pure math matrix.
 
 ## Transform 2D:
 - https://github.com/Lightnet/spacetimedb-app-transform2d
 
-  Made this project repo for stand alone for better testing. It can be use for place holder project sample.
-
-  Almost all basic features of transform set and set handers.
+  Made this project repo for stand alone for better testing. It can be use for place holder sample project. Almost all basic features of transform set and set handers. It use math on the server side. Three.js will have be translate 2D to 3D.
 
 # Transform Hierarchy:
-  To able to use three.js matrix and helper to handle transform hierarchy for 3D. To handle position, rotation, scale, matrix and relate to parent and child.
-
-  There are different way to handle transform hierarchy in client but in server side. It need to follow SpaceTimeDB format to able to create, update and delete entity and matrix. There are restriction on reducer api it can support one depth or stacking by child function call and anymore is not possible since to update query the table. As it mentioned there fail rollback in case of fail query.
+  To able to use three.js matrix and helper to to test transform hierarchy for 2D and 3D. Then go math matrix was easy and hard. 
+  
+  There are different way to handle transform hierarchy in client since it use matrix so mesh update matrix are disable for 3D but 2D it is not disble. 
+  
+  The SpaceTimeDB use webassembly server module format. So it can't use nodejs but use internal api calls. SpaceTimeDB has Reducer api function extend class can't have too many nested functiuons only one layer. As it mentioned there fail rollback in case of fail query. It need to create, update, query and delete else it will fail to query database. 
+  
 
 ```ts
  ctx.db.transform.entityId.update(transform)
@@ -43,7 +48,7 @@
 ![Screenshot of browser test](screenshots/transform3d20260410.png)
 
 # Editor:
-  Current testing the position, quaternion, scale to update for box transform 3d. Using the Tweakpane for debug sync from the SpaceTimeDB.
+  The UI tool has the testing for position, rotation, quaternion, scale to update for box transform 2d and 3d. Using the Tweakpane for debug sync from the SpaceTimeDB.
 
 ## Features:
 - [x] entity
@@ -120,6 +125,8 @@ spacetime dev --server local
 spacetime sql --server local spacetime-app-transform "SELECT * FROM entity"
 
 spacetime sql --server local spacetime-app-transform "SELECT * FROM transform3d"
+
+spacetime sql --server local spacetime-app-transform "SELECT * FROM transform2d"
 
 ```
  For query table in command line.
