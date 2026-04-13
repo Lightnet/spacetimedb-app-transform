@@ -4,7 +4,7 @@
 // https://spacetimedb.com/docs/functions/procedures
 import { table, t } from 'spacetimedb/server';
 import spacetimedb from "../module";
-import { Coordinates, Quaternion } from '../types';
+import { Vect3, EulerDegrees, Quaternion, Transform3DRotResult } from '../types';
 import * as THREE from 'three';
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL MATRIX
@@ -41,9 +41,9 @@ export const get_transform3d_world_matrix = spacetimedb.procedure(
 // 
 //-----------------------------------------------
 const Transform3DResult = t.object('Transform3DResult',{
-  position: t.option(Coordinates),
+  position: t.option(Vect3),
   quaternion: t.option(Quaternion),
-  scale: t.option(Coordinates),
+  scale: t.option(Vect3),
   matrix:t.option(t.array(t.f64()))
 });
 //-----------------------------------------------
@@ -78,7 +78,7 @@ export const get_transform3d_local = spacetimedb.procedure(
 //-----------------------------------------------
 export const get_transform3d_local_position = spacetimedb.procedure(
   { id: t.string() },
-  t.option( Coordinates ),
+  t.option( Vect3 ),
   (ctx, { id }) => {
     return ctx.withTx((tx) => {
       const t3d = tx.db.transform3d.entityId.find(id);
@@ -104,11 +104,45 @@ export const get_transform3d_local_quaternion = spacetimedb.procedure(
   });
 });
 //-----------------------------------------------
+// GET TRANSFORM 3D LOCAL ROTATION (in Degrees - Euler XYZ)
+//-----------------------------------------------
+//-----------------------------------------------
+// GET TRANSFORM 3D LOCAL ROTATION (in Degrees - Euler XYZ)
+//-----------------------------------------------
+export const get_transform3d_local_rotation = spacetimedb.procedure(
+  { id: t.string() },
+  t.option(EulerDegrees),
+  (ctx, { id }) => {
+    return ctx.withTx((tx) => {
+      const t3d = tx.db.transform3d.entityId.find(id);
+      
+      // Early return if no transform or no quaternion
+      if (!t3d || !t3d.quaternion) {
+        return undefined;
+      }
+
+      const q = t3d.quaternion;
+      const quaternion = new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize();
+
+      // Convert quaternion → Euler angles in degrees (XYZ order)
+      const euler = new THREE.Euler().setFromQuaternion(quaternion, 'XYZ');
+
+      return {
+        x: THREE.MathUtils.radToDeg(euler.x),
+        y: THREE.MathUtils.radToDeg(euler.y),
+        z: THREE.MathUtils.radToDeg(euler.z),
+      };
+    });
+  }
+);
+
+
+//-----------------------------------------------
 // GET TRANSFORM 3D LOCAL SCALE
 //-----------------------------------------------
 export const get_transform3d_local_scale = spacetimedb.procedure(
   { id: t.string() },
-  t.option( Coordinates ),
+  t.option( Vect3 ),
   (ctx, { id }) => {
     return ctx.withTx((tx) => {
       const t3d = tx.db.transform3d.entityId.find(id);
@@ -152,7 +186,7 @@ export const get_transform3d_world = spacetimedb.procedure(
 //-----------------------------------------------
 export const get_transform3d_world_position = spacetimedb.procedure(
   { id: t.string() },
-  t.option(Coordinates),
+  t.option(Vect3),
   (ctx, { id }) => {
     return ctx.withTx((tx) => {
     const transform = tx.db.transform3d.entityId.find(id);
@@ -201,14 +235,6 @@ export const get_transform3d_world_quaternion = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D WORLD ROTATION (in Degrees - Euler XYZ)
 //-----------------------------------------------
-
-const EulerDegrees =t.object('EulerDegrees', {
-    x: t.f64(),
-    y: t.f64(),
-    z: t.f64(),
-  })
-
-
 export const get_transform3d_world_rotation = spacetimedb.procedure(
   { id: t.string() },
   t.option(EulerDegrees),
@@ -242,7 +268,7 @@ export const get_transform3d_world_rotation = spacetimedb.procedure(
 //-----------------------------------------------
 export const get_transform3d_world_scale = spacetimedb.procedure(
   { id: t.string() },
-  t.option(Coordinates),
+  t.option(Vect3),
   (ctx, { id }) => {
     return ctx.withTx((tx) => {
       const transform = tx.db.transform3d.entityId.find(id);
@@ -265,21 +291,12 @@ export const get_transform3d_world_scale = spacetimedb.procedure(
     });
   }
 );
-
-const Transform3DWorldRotResult = t.object('Transform3DWorldRotResult', {
-  position: t.option(Coordinates),
-  quaternion: t.option(Quaternion),
-  rotation: t.option(EulerDegrees),
-  scale: t.option(Coordinates),
-  matrix: t.option(t.array(t.f64())),
-});
-
 //-----------------------------------------------
 // GET TRANSFORM 3D WORLD (full: pos + quat + rotation degrees + scale + matrix)
 //-----------------------------------------------
 export const get_transform3d_world_rot = spacetimedb.procedure(
   { id: t.string() },
-  t.option(Transform3DWorldRotResult),
+  t.option(Transform3DRotResult),
   (ctx, { id }) => {
     return ctx.withTx((tx) => {
       const transform = tx.db.transform3d.entityId.find(id);

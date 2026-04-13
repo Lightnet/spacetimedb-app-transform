@@ -855,19 +855,12 @@ const testFolder = pane.addFolder({
   title: 'Test',
 });
 
-testFolder.addButton({title:'get transform3d world rot'}).on('click', async ()=>{
-  const mat = await conn.procedures.getTransform3DWorldRot({
-    id:PARAMS.entityId
-  })
-  console.log("local mattix: ", mat)
-})
-
 testFolder.addButton({title:'get transform3d local'}).on('click', async ()=>{
   const mat = await conn.procedures.getTransform3DLocal({
     id:PARAMS.entityId
   })
   console.log("local mattix: ", mat)
-})
+});
 
 
 testFolder.addButton({title:'get transform3d local position'}).on('click', async ()=>{
@@ -875,15 +868,78 @@ testFolder.addButton({title:'get transform3d local position'}).on('click', async
     id:PARAMS.entityId
   })
   console.log("local postion: ", mat)
-})
+});
 
+testFolder.addButton({title:'get transform3d local quaternion'}).on('click', async ()=>{
+  const quat = await conn.procedures.getTransform3DLocalQuaternion({
+    id:PARAMS.entityId
+  })
+  console.log("local quat: ", quat)
+});
+
+testFolder.addButton({title:'get transform3d local scale'}).on('click', async ()=>{
+  const scale = await conn.procedures.getTransform3DLocalScale({
+    id:PARAMS.entityId
+  })
+  console.log("local scale: ", scale)
+});
+
+testFolder.addButton({title:'get transform3d local rotation'}).on('click', async ()=>{
+  const rotate = await conn.procedures.getTransform3DLocalRotation({
+    id:PARAMS.entityId
+  })
+  console.log("local rotate: ", rotate)
+});
 
 testFolder.addButton({title:'get transform3d world'}).on('click', async ()=>{
   const t3d = await conn.procedures.getTransform3DWorld({
     id:PARAMS.entityId
   })
   console.log("world transform3d: ", t3d)
-})
+});
+
+testFolder.addButton({title:'get transform3d world rot'}).on('click', async ()=>{
+  const mat = await conn.procedures.getTransform3DWorldRot({
+    id:PARAMS.entityId
+  })
+  console.log("local mattix: ", mat)
+});
+
+testFolder.addButton({title:'get transform3d world position'}).on('click', async ()=>{
+  const pos = await conn.procedures.getTransform3DWorldPosition({
+    id:PARAMS.entityId
+  })
+  console.log("local pos: ", pos)
+});
+
+
+testFolder.addButton({title:'get transform3d world quaternio'}).on('click', async ()=>{
+  const quat = await conn.procedures.getTransform3DWorldQuaternion({
+    id:PARAMS.entityId
+  })
+  console.log("local quat: ", quat)
+});
+
+testFolder.addButton({title:'get transform3d world rotation'}).on('click', async ()=>{
+  const rotation = await conn.procedures.getTransform3DWorldRotation({
+    id:PARAMS.entityId
+  })
+  console.log("local rotation: ", rotation)
+});
+
+
+
+testFolder.addButton({title:'get transform3d world scale'}).on('click', async ()=>{
+  const scale = await conn.procedures.getTransform3DWorldScale({
+    id:PARAMS.entityId
+  })
+  console.log("local scale: ", scale)
+});
+
+
+
+
+
 
 
 
@@ -894,27 +950,27 @@ testFolder.addButton({title:'get transform3d world'}).on('click', async ()=>{
 
 testFolder.addButton({title:'transform list'}).on('click',()=>{
   console.log(PARAMS.transform3d);
-})
+});
 
 testFolder.addButton({title:'update all transform test'}).on('click',()=>{
   conn.reducers.updateAllTransform3Ds();
-})
+});
 
 testFolder.addButton({title:'set all transform null test'}).on('click',()=>{
   conn.reducers.updateAllTransform3DsNull();
-})
+});
 
 testFolder.addButton({title:'clear transforms'}).on('click',()=>{
   conn.reducers.clearAllTransform2Ds();
   conn.reducers.clearAllTransform3Ds();
-})
+});
 
 testFolder.addButton({title:'get transform3d local matrix'}).on('click', async ()=>{
   const mat = await conn.procedures.getTransform3DLocalMatrix({
     id:PARAMS.entityId
   })
   console.log("mattix: ", mat)
-})
+});
 
 
 testFolder.addButton({title:'get transform3d world matrix'}).on('click', async ()=>{
@@ -922,7 +978,7 @@ testFolder.addButton({title:'get transform3d world matrix'}).on('click', async (
     id:PARAMS.entityId
   })
   console.log("mattix: ", mat)
-})
+});
 
 
 // pane.addButton({title:'Login'}).on('click',()=>{

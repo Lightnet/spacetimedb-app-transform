@@ -23,18 +23,18 @@ export const Transform2DResult = t.object('Transform2DResult',{
   scale: t.option(Vect2),
 });
 //-----------------------------------------------
-// 
+// (in Degrees - Euler XYZ)
 //-----------------------------------------------
-// Define a nested object type for coordinates
-export const SVector2 = t.object('Vector2', {
+export const EulerDegrees =t.object('EulerDegrees', {
   x: t.f64(),
-  y: t.f64()
-});
+  y: t.f64(),
+  z: t.f64(),
+})
 //-----------------------------------------------
 // 
 //-----------------------------------------------
 // Define a nested object type for coordinates
-export const Coordinates = t.object('Coordinates', {
+export const Vect3 = t.object('Vect3', {
   x: t.f64(),
   y: t.f64(),
   z: t.f64(),
@@ -51,10 +51,10 @@ export const Quaternion = t.object('Quaternion', {
 //-----------------------------------------------
 // 
 //-----------------------------------------------
-// Define a custom type for a 4x4 Matrix
-export const Matrix4 = t.object('Matrix4', {
-  elements: t.array(t.f32()), // Storing 16 floats
+export const Transform3DRotResult = t.object('Transform3DWorldRotResult', {
+  position: t.option(Vect3),
+  quaternion: t.option(Quaternion),
+  rotation: t.option(EulerDegrees),
+  scale: t.option(Vect3),
+  matrix: t.option(t.array(t.f64())),
 });
-//-----------------------------------------------
-// 
-//-----------------------------------------------
