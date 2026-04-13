@@ -198,7 +198,13 @@ export const transform2d = table(
   Work in progress.
 
 ## Entity
-  Having id tag string for handle. For easy to add on to type of components.
+  Having entity id tag string for handle add on components.
+
+```
+  Entity
+   - Transform2D
+   - Transform3D
+```
 
 ### createEntity:
 ```js
@@ -223,6 +229,18 @@ conn.reducers.addEntityTransform3D({
 });
 ```
   Entity add transform 3D.
+
+```js
+  conn.reducers.addEntityTransform3D({
+    entityId: PARAMS.entityId, // required
+    position:PARAMS.ph_position, // option {x,y,z}
+    quaternion:PARAMS.ph_quaternion, // option {x,y,z,w}
+    scale:PARAMS.ph_scale, // option // {x,y,z}
+    parentId:"", // option // string //need to check exist.
+  });
+```
+  This has option to set params.
+
 
 ### removeEntityTransform3D:
 ```js
@@ -275,6 +293,90 @@ conn.reducers.setTransform3DScale({
   z:PARAMS.t_scale.z
 })
 ```
+
+### getTransform3DLocal:
+```js
+  const transform2d = await conn.procedures.getTransform3DLocal({
+    id:PARAMS.entityId
+  })
+  console.log("local transform2d: ", transform2d)
+```
+```
+matrix: (16) [...]
+position: {x: 1, y: 0.6, z: 0}
+quaternion: {x: 0, y: 0, z: 0, w: 1}
+scale: {x: 1, y: 1, z: 1}
+```
+
+
+### getTransform3DLocalPosition:
+```js
+  const pos = await conn.procedures.getTransform3DLocalPosition({
+    id:PARAMS.entityId
+  })
+  console.log("local postion: ", pos)
+```
+
+### getTransform3DLocalQuaternion:
+```js
+  const quat = await conn.procedures.getTransform3DLocalQuaternion({
+    id:PARAMS.entityId
+  })
+  console.log("local quat: ", quat)
+```
+
+### getTransform3DLocalScale:
+```js
+  const scale = await conn.procedures.getTransform3DLocalScale({
+    id:PARAMS.entityId
+  })
+  console.log("local scale: ", scale)
+```
+
+### getTransform3DLocalRotation:
+```js
+  const rotate = await conn.procedures.getTransform3DLocalRotation({
+    id:PARAMS.entityId
+  })
+  console.log("local rotate: ", rotate)
+```
+
+### getTransform3DWorld:
+```js
+  const t3d = await conn.procedures.getTransform3DWorld({
+    id:PARAMS.entityId
+  })
+  console.log("world transform3d: ", t3d)
+```
+### getTransform3DWorldRot:
+```js
+  const tranform3d = await conn.procedures.getTransform3DWorldRot({
+    id:PARAMS.entityId
+  })
+  console.log("local tranform3d: ", tranform3d)
+```
+### getTransform3DWorldPosition:
+```js
+  const pos = await conn.procedures.getTransform3DWorldPosition({
+    id:PARAMS.entityId
+  })
+  console.log("local pos: ", pos)
+```
+### getTransform3DWorldQuaternion:
+```js
+  const quat = await conn.procedures.getTransform3DWorldQuaternion({
+    id:PARAMS.entityId
+  })
+  console.log("local quat: ", quat)
+```
+### getTransform3DWorldScale:
+```js
+  const scale = await conn.procedures.getTransform3DWorldScale({
+    id:PARAMS.entityId
+  })
+  console.log("local scale: ", scale)
+```
+
 ### updateAllTransform3Ds:
 ```js
 conn.reducers.updateAllTransform3Ds();
@@ -286,3 +388,131 @@ conn.reducers.updateAllTransform3Ds();
 conn.reducers.updateAllTransform3DsNull();
 ```
   This is to clear out the matrix for tests.
+
+
+
+## Transform 2D:
+ There are get and set function for transform 2D. Can get and set for parent, transform2d (all input and output but not parent id), position, rotation and scale. As well other debug call functions.
+ 
+### setTransform2DParent:
+```js
+  conn.reducers.setTransform2DParent({
+    entityId:PARAMS.entityId,
+    parentId:id // parentId
+  })
+```
+
+### setTransform2D:
+```js
+conn.reducers.setTransform2D({
+    entityId:PARAMS.entityId, 
+    position:PARAMS.t2_position, // {x:0,y:0}
+    rotation:PARAMS.t2_rotation, 
+    scale:PARAMS.t2_scale, // {x:1,y:1}
+  });
+```
+
+### setTransform2DPosition:
+```js
+  conn.reducers.setTransform2DPosition({
+    entityId:PARAMS.entityId,
+    x:PARAMS.t2_position.x,
+    y:PARAMS.t2_position.y
+  });
+```
+
+### setTransform2DRotation:
+```js
+  conn.reducers.setTransform2DRotation({
+    entityId:PARAMS.entityId,
+    rotation: PARAMS.t2_rotation // degree
+  });
+```
+
+### setTransform2DScale:
+```js
+  conn.reducers.setTransform2DScale({
+    entityId:PARAMS.entityId,
+    x:PARAMS.t2_scale.x,
+    y:PARAMS.t2_scale.y
+  })
+```
+
+### getTransform2DParentId:
+```js
+  let _parentId = await conn.procedures.getTransform2DParentId({
+    entityId:PARAMS.entityId
+  });
+  console.log("Parent Id:", _parentId)
+```
+### getLocalTransform2D:
+```js
+  let t2d = await conn.procedures.getLocalTransform2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("getLocalTransform2D:", t2d);
+  // {position:{x:0,y:0},rotation:0,scale:{x:1,y:1}}
+```
+
+### getLocalPosition2D:
+```js
+  let pos = await conn.procedures.getLocalPosition2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("pos:", pos)
+```
+
+### getLocalRotation2D:
+```js
+  let rot = await conn.procedures.getLocalRotation2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("rot:", rot)
+```
+
+### getLocalScale2D:
+```js
+  let scale = await conn.procedures.getLocalScale2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("scale:", scale)
+```
+
+### getWorldTransform2D:
+```js
+  let t2d = await conn.procedures.getWorldTransform2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("getWorldTransform2D:", t2d);
+  // {position:{x:1,y:1},rotation:0,scale:{x:1,y:1}}
+```
+
+### getWorldPosition2D:
+```js
+  let pos = await conn.procedures.getWorldPosition2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("pos:", pos)
+```
+
+### getWorldRotation2D:
+```js
+  let rot = await conn.procedures.getWorldRotation2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("rot:", rot)
+```
+
+### getWorldScale2D:
+```js
+  let scale = await conn.procedures.getWorldScale2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("scale:", scale)
+```
+
+### clearAllTransforms:
+```js
+  conn.reducers.clearAllTransforms();
+```
+  For debugging.

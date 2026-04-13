@@ -92,6 +92,7 @@ let deleteEntityBinding;
 let hierarchy3DParentBinding;
 let hierarchyFolder;
 let marker;
+let ph_holder;
 
 let addTransform2DBinding;
 let removeTransform2DBinding;
@@ -107,6 +108,11 @@ const PARAMS = {
   entities:[],
   transform3d:[],
   transform2d:[],
+
+  ph_position:{x:0,y:1,z:0},
+  ph_quaternion:{x:0,y:0,z:0,w:0},
+  ph_rotation:{x:0,y:0,z:0},
+  ph_scale:{x:1,y:1,z:1},
 
   t_position:{x:0,y:0,z:0},
   t_rotation:{x:0,y:0,z:0},
@@ -174,14 +180,14 @@ function setupDBEntity(){
 //-----------------------------------------------
 // TRANSFORM 3D
 //-----------------------------------------------
-function createBox(){
+function createBox(color=0xffffff){
   const geometry = new THREE.BoxGeometry(1, 1, 1);
   // const wireframe = new THREE.WireframeGeometry( geometry );
   const edges = new THREE.EdgesGeometry(geometry);
   // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
   // const cube = new THREE.Mesh(geometry, material);
   // const cube = new THREE.Mesh(wireframe, material);
-  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+  const lineMaterial = new THREE.LineBasicMaterial({ color: color });
   // const cubeLine = new THREE.LineSegments(wireframe, lineMaterial);
   const cubeLine = new THREE.LineSegments(edges, lineMaterial);
   cubeLine.matrixAutoUpdate = false; // disable to use matrix
@@ -190,6 +196,7 @@ function createBox(){
   // console.log(cubeLine);
   return cubeLine;
 }
+
 
 function update_model_transform3d(mesh, row){
   // mesh.position.set(
@@ -390,6 +397,9 @@ function setup_three(){
 
   // Start the loop
   renderer.setAnimationLoop(animate);
+
+  ph_holder = createBox(0xebe534)
+  scene.add(ph_holder)
 }
 
 function onResize(){
@@ -643,13 +653,55 @@ transform3dFolder.addBinding(PARAMS, 'entityId',{
   label:'Select:',
   readonly:true
 })
+transform3dFolder.addBinding(PARAMS, 'ph_position',{label:'Position'}).on('change',update_place_holder)
+transform3dFolder.addBinding(PARAMS, 'ph_rotation',{label:'Rotation'}).on('change',update_place_holder)
+transform3dFolder.addBinding(PARAMS, 'ph_scale',{label:'Scale'}).on('change',update_place_holder)
+
+function update_place_holder(){
+  ph_holder.matrixAutoUpdate = true;
+  ph_holder.position.set(
+    PARAMS.ph_position.x,
+    PARAMS.ph_position.y,
+    PARAMS.ph_position.z
+  )
+
+  const radX = THREE.MathUtils.degToRad(PARAMS.ph_rotation.x);
+  const radY = THREE.MathUtils.degToRad(PARAMS.ph_rotation.y);
+  const radZ = THREE.MathUtils.degToRad(PARAMS.ph_rotation.z);
+
+  // 2. Create Euler angles (default order is 'XYZ')
+  const euler = new THREE.Euler(radX, radY, radZ, 'XYZ');
+  const quat = new THREE.Quaternion().setFromEuler(euler);
+
+  PARAMS.ph_quaternion.x = quat.x;
+  PARAMS.ph_quaternion.y = quat.y;
+  PARAMS.ph_quaternion.z = quat.z;
+  PARAMS.ph_quaternion.w = quat.w;
+
+  ph_holder.quaternion.setFromEuler(euler);
+
+  ph_holder.scale.set(
+    PARAMS.ph_scale.x,
+    PARAMS.ph_scale.y,
+    PARAMS.ph_scale.z
+  )
+}
+
 addTransform3DBinding = transform3dFolder.addButton({
   title: 'Add Transform 3D',
 }).on('click',()=>{
   console.log("add Transform 3D")
+  // conn.reducers.addEntityTransform3D({
+  //   entityId: PARAMS.entityId
+  // });
+
   conn.reducers.addEntityTransform3D({
-    entityId: PARAMS.entityId
+    entityId: PARAMS.entityId,
+    position:PARAMS.ph_position,
+    quaternion:PARAMS.ph_quaternion,
+    scale:PARAMS.ph_scale,
   });
+
   setTimeout(()=>{
     selectEntity(PARAMS.entityId)
   },50)
@@ -856,18 +908,18 @@ const testFolder = pane.addFolder({
 });
 
 testFolder.addButton({title:'get transform3d local'}).on('click', async ()=>{
-  const mat = await conn.procedures.getTransform3DLocal({
+  const transform2d = await conn.procedures.getTransform3DLocal({
     id:PARAMS.entityId
   })
-  console.log("local mattix: ", mat)
+  console.log("local transform2d: ", transform2d)
 });
 
 
 testFolder.addButton({title:'get transform3d local position'}).on('click', async ()=>{
-  const mat = await conn.procedures.getTransform3DLocalPosition({
+  const pos = await conn.procedures.getTransform3DLocalPosition({
     id:PARAMS.entityId
   })
-  console.log("local postion: ", mat)
+  console.log("local postion: ", pos)
 });
 
 testFolder.addButton({title:'get transform3d local quaternion'}).on('click', async ()=>{
@@ -899,10 +951,10 @@ testFolder.addButton({title:'get transform3d world'}).on('click', async ()=>{
 });
 
 testFolder.addButton({title:'get transform3d world rot'}).on('click', async ()=>{
-  const mat = await conn.procedures.getTransform3DWorldRot({
+  const tranform3d = await conn.procedures.getTransform3DWorldRot({
     id:PARAMS.entityId
   })
-  console.log("local mattix: ", mat)
+  console.log("local tranform3d: ", tranform3d)
 });
 
 testFolder.addButton({title:'get transform3d world position'}).on('click', async ()=>{
@@ -928,24 +980,12 @@ testFolder.addButton({title:'get transform3d world rotation'}).on('click', async
 });
 
 
-
 testFolder.addButton({title:'get transform3d world scale'}).on('click', async ()=>{
   const scale = await conn.procedures.getTransform3DWorldScale({
     id:PARAMS.entityId
   })
   console.log("local scale: ", scale)
 });
-
-
-
-
-
-
-
-
-
-
-
 
 
 testFolder.addButton({title:'transform list'}).on('click',()=>{

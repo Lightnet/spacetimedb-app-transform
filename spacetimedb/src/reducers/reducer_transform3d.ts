@@ -1,46 +1,60 @@
 //-----------------------------------------------
 // REDUCER TRANSFORM 3D
 //-----------------------------------------------
-import { Quaternion, Euler } from 'three';
+import { Euler } from 'three';
 import { t, SenderError } from 'spacetimedb/server';
 import spacetimedb from '../module';
 import { degreeToRadians } from '../helper';
 import * as THREE from 'three';
+import { Quaternion, Vect3 } from '../types';
 //-----------------------------------------------
 // ADD TRANSFORM 3D
 //-----------------------------------------------
 export const add_entity_transform3d = spacetimedb.reducer(
-  { entityId: t.string() }, 
-  (ctx, { entityId }) => {
-  const transform = ctx.db.transform3d.entityId.find(entityId);
-  console.log("transform: ", transform)
-  if(!transform){
-    console.log("add transform 3d");
-    ctx.db.transform3d.insert({
-      position: { x: 0, y: 0, z: 0 },
-      quaternion: { x: 0, y: 0, z: 0, w: 1 },
-      scale: { x: 1, y: 1, z: 1 },
-      entityId: entityId,
-      parentId: "",
-      localMatrix: [
-        1, 0, 0, 0, // Row 1: X-axis + X-translation
-        0, 1, 0, 0, // Row 2: Y-axis + Y-translation
-        0, 0, 1, 0, // Row 3: Z-axis + Z-translation
-        0, 0, 0, 1 // Row 4: Perspective
-      ],
-      worldMatrix: [
-        1, 0, 0, 0, // Row 1: X-axis + X-translation
-        0, 1, 0, 0, // Row 2: Y-axis + Y-translation
-        0, 0, 1, 0, // Row 3: Z-axis + Z-translation
-        0, 0, 0, 1 // Row 4: Perspective
-      ],
-      // children: [],
-      isDirty: true,
-      // localMatrix: undefined,
-      // worldMatrix: undefined
+  {
+    entityId: t.string(),
+    position: t.option(Vect3),      // ← option
+    quaternion: t.option(Quaternion), // ← option
+    scale: t.option(Vect3),         // ← option
+    parentId: t.option(t.string()), // ← extra useful field
+  },
+  (ctx, { entityId, position, quaternion, scale, parentId }) => {
+    
+    // Prevent duplicate
+    if (ctx.db.transform3d.entityId.find(entityId)) {
+      console.log(`Transform3D for entity ${entityId} already exists. Skipping.`);
+      return;
+    }
+
+    console.log(`Adding new Transform3D for entity: ${entityId}`);
+
+    // Safe defaults with fallback
+    const safePosition = position ?? { x: 0, y: 0, z: 0 };
+    const safeQuaternion = quaternion ?? { x: 0, y: 0, z: 0, w: 1 };
+    const safeScale = scale ?? { x: 1, y: 1, z: 1 };
+    const safeParentId = parentId ?? "";
+
+    // Compute local matrix from the (possibly provided) values
+    const localMat = computeLocalMatrix({
+      position: safePosition,
+      quaternion: safeQuaternion,
+      scale: safeScale,
     });
+
+    ctx.db.transform3d.insert({
+      entityId,
+      parentId: safeParentId,
+      position: safePosition,
+      quaternion: safeQuaternion,
+      scale: safeScale,
+      localMatrix: localMat.elements as any,
+      worldMatrix: localMat.elements as any,   // roots start with local = world
+      isDirty: true,
+    });
+
+    console.log(`Transform3D added successfully for ${entityId}`);
   }
-});
+);
 //-----------------------------------------------
 // REMOVE TRANSFORM 3D
 //-----------------------------------------------
@@ -84,14 +98,6 @@ export const transform3d_compute_local_matrix = spacetimedb.reducer(
           _transform3d.quaternion.z,
           _transform3d.quaternion.w
         ),
-        // new THREE.Quaternion().setFromEuler(
-        //   new THREE.Euler(
-        //     _transform3d.localQuaternion.x * Math.PI / 180,
-        //     _transform3d.localQuaternion.y * Math.PI / 180,
-        //     _transform3d.localQuaternion.z * Math.PI / 180,
-        //     'XYZ'
-        //   )
-        // ),
         new THREE.Vector3(_transform3d.scale.x, _transform3d.scale.y, _transform3d.scale.z)
       );
       _transform3d.localMatrix = mat.elements;
@@ -293,7 +299,7 @@ export const set_transform3d_rotation = spacetimedb.reducer(
   // console.log("ROTATION....");
   const transform = ctx.db.transform3d.entityId.find(entityId);
   if(transform){
-    let quat = new Quaternion();
+    let quat = new THREE.Quaternion();
     quat.setFromEuler(
       new Euler(
         degreeToRadians(x),
