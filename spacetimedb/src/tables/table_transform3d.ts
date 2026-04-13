@@ -15,9 +15,9 @@ export const transform3d = table(
     entityId: t.string().primaryKey(),
     parentId: t.string().optional(),
     isDirty:t.bool().default(true),
-    localPosition: Coordinates,
-    localQuaternion: Quaternion,
-    localScale: Coordinates,
+    position: Coordinates,
+    quaternion: Quaternion,
+    scale: Coordinates,
     localMatrix: t.array(t.f32()).optional(),
     worldMatrix: t.array(t.f32()).optional(),
   }

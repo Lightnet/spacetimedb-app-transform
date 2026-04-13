@@ -193,21 +193,21 @@ function createBox(){
 
 function update_model_transform3d(mesh, row){
   // mesh.position.set(
-  //   row.localPosition.x,
-  //   row.localPosition.y,
-  //   row.localPosition.z
+  //   row.position.x,
+  //   row.position.y,
+  //   row.position.z
   // )
   // let quat = new THREE.Quaternion(
-  //   row.localQuaternion.x,
-  //   row.localQuaternion.y,
-  //   row.localQuaternion.z,
-  //   row.localQuaternion.w
+  //   row.quaternion.x,
+  //   row.quaternion.y,
+  //   row.quaternion.z,
+  //   row.quaternion.w
   // )
   // mesh.rotation.setFromQuaternion(quat);
   // mesh.scale.set(
-  //   row.localScale.x,
-  //   row.localScale.y,
-  //   row.localScale.z
+  //   row.scale.x,
+  //   row.scale.y,
+  //   row.scale.z
   // )
   if(row.worldMatrix){
     const newMatrix = new THREE.Matrix4();
@@ -415,9 +415,9 @@ function update_select_marker(){
     const transform2d = PARAMS.transform2d.find(e => e.entityId === PARAMS.entityId);
     if(transform3d){
       // marker.position.set(
-      //   transform.localPosition.x,
-      //   transform.localPosition.y,
-      //   transform.localPosition.z
+      //   transform.position.x,
+      //   transform.position.y,
+      //   transform.position.z
       // )
       const matrix = new THREE.Matrix4();
       if(transform3d.worldMatrix){
@@ -529,13 +529,13 @@ function selectEntity(id){
   const transform3d = PARAMS.transform3d.find(e => e.entityId === id);
   if(transform3d){
     // console.log(transform);
-    PARAMS.t_position.x = transform3d.localPosition.x;
-    PARAMS.t_position.y = transform3d.localPosition.y;
-    PARAMS.t_position.z = transform3d.localPosition.z;
+    PARAMS.t_position.x = transform3d.position.x;
+    PARAMS.t_position.y = transform3d.position.y;
+    PARAMS.t_position.z = transform3d.position.z;
     if(positionBinding) positionBinding.refresh();
 
-    // console.log(transform?.localQuaternion);
-    let quat = new THREE.Quaternion(transform3d.localQuaternion.x,transform3d.localQuaternion.y,transform3d.localQuaternion.z,transform3d.localQuaternion.w);
+    // console.log(transform?.quaternion);
+    let quat = new THREE.Quaternion(transform3d.quaternion.x,transform3d.quaternion.y,transform3d.quaternion.z,transform3d.quaternion.w);
     const euler = new THREE.Euler().setFromQuaternion(quat, 'XYZ');
     // console.log(euler);
     PARAMS.t_rotation.x = THREE.MathUtils.radToDeg(euler.x);
@@ -543,9 +543,9 @@ function selectEntity(id){
     PARAMS.t_rotation.z = THREE.MathUtils.radToDeg(euler.z);
     // console.log(PARAMS.t_rotation);
     if(rotationBinding) rotationBinding.refresh();
-    PARAMS.t_scale.x = transform3d.localScale.x;
-    PARAMS.t_scale.y = transform3d.localScale.y;
-    PARAMS.t_scale.z = transform3d.localScale.z;
+    PARAMS.t_scale.x = transform3d.scale.x;
+    PARAMS.t_scale.y = transform3d.scale.y;
+    PARAMS.t_scale.z = transform3d.scale.z;
     if(scaleBinding) scaleBinding.refresh();
     transform3DPropsFolder.disabled = false;
     removeTransform3DBinding.disabled = false;
@@ -557,26 +557,18 @@ function selectEntity(id){
 
   const _transform2d = PARAMS.transform2d.find(e => e.entityId === id);
   if(_transform2d){
-    const worldPos = transformPoint2D(_transform2d.worldMatrix, 0, 0);
-    let worldRotation = getRotationFromMatrix2D(_transform2d.worldMatrix)
-    let worldScale = getScaleFromMatrix2D(_transform2d.worldMatrix)
 
-    // mesh.position.set(worldPos.x, worldPos.y, 0);
-    // mesh.rotation.z = worldRotation;
-    // mesh.scale.set(worldScale.x, worldScale.y, 1);
+    PARAMS.t2_position = _transform2d.position
+    PARAMS.t2_rotation = _transform2d.rotation
+    PARAMS.t2_scale = _transform2d.scale
 
-    PARAMS.t2_position.x = worldPos.x;
-    PARAMS.t2_position.y = worldPos.y;
-
-    PARAMS.t2_rotation = radiansToDegree(worldRotation);
-
-    PARAMS.t2_scale.x = worldScale.x;
-    PARAMS.t2_scale.y = worldScale.y;
     if(position2DBinding) position2DBinding.refresh()
     if(rotation2DBinding) rotation2DBinding.refresh()
     if(scale2DBinding) scale2DBinding.refresh()
     if(addTransform2DBinding)addTransform2DBinding.disabled = true;
     if(removeTransform2DBinding)removeTransform2DBinding.disabled = false;
+
+    if(update_hierarchy_parent)update_hierarchy_parent();
 
   }else{
     if(addTransform2DBinding)addTransform2DBinding.disabled = false;
@@ -799,6 +791,7 @@ function update_hierarchy_parent(){
   });
   const t2d = PARAMS.transform2d.find(r=>r.entityId == PARAMS.entityId);
   if(t2d){
+    console.log(t2d);
     if(t2d.parentId != ""){
       parentId = t2d.parentId;
     }
@@ -862,6 +855,43 @@ const testFolder = pane.addFolder({
   title: 'Test',
 });
 
+testFolder.addButton({title:'get transform3d world rot'}).on('click', async ()=>{
+  const mat = await conn.procedures.getTransform3DWorldRot({
+    id:PARAMS.entityId
+  })
+  console.log("local mattix: ", mat)
+})
+
+testFolder.addButton({title:'get transform3d local'}).on('click', async ()=>{
+  const mat = await conn.procedures.getTransform3DLocal({
+    id:PARAMS.entityId
+  })
+  console.log("local mattix: ", mat)
+})
+
+
+testFolder.addButton({title:'get transform3d local position'}).on('click', async ()=>{
+  const mat = await conn.procedures.getTransform3DLocalPosition({
+    id:PARAMS.entityId
+  })
+  console.log("local postion: ", mat)
+})
+
+
+testFolder.addButton({title:'get transform3d world'}).on('click', async ()=>{
+  const t3d = await conn.procedures.getTransform3DWorld({
+    id:PARAMS.entityId
+  })
+  console.log("world transform3d: ", t3d)
+})
+
+
+
+
+
+
+
+
 testFolder.addButton({title:'transform list'}).on('click',()=>{
   console.log(PARAMS.transform3d);
 })
@@ -878,6 +908,22 @@ testFolder.addButton({title:'clear transforms'}).on('click',()=>{
   conn.reducers.clearAllTransform2Ds();
   conn.reducers.clearAllTransform3Ds();
 })
+
+testFolder.addButton({title:'get transform3d local matrix'}).on('click', async ()=>{
+  const mat = await conn.procedures.getTransform3DLocalMatrix({
+    id:PARAMS.entityId
+  })
+  console.log("mattix: ", mat)
+})
+
+
+testFolder.addButton({title:'get transform3d world matrix'}).on('click', async ()=>{
+  const mat = await conn.procedures.getTransform3DWorldMatrix({
+    id:PARAMS.entityId
+  })
+  console.log("mattix: ", mat)
+})
+
 
 // pane.addButton({title:'Login'}).on('click',()=>{
 //   van.add(document.body, windowLogin())

@@ -15,6 +15,8 @@ export * from './reducers/reducer_test'; // export all functions
 export * from './reducers/reducer_entity';
 export * from './reducers/reducer_transform3d';
 export * from './reducers/reducer_transform2d';
+export * from './procedures/procedure_transform2d';
+export * from './procedures/procedure_transform3d';
 //-----------------------------------------------
 // 
 //-----------------------------------------------

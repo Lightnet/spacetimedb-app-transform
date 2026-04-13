@@ -17,27 +17,27 @@ export const add_entity_transform3d = spacetimedb.reducer(
   if(!transform){
     console.log("add transform 3d");
     ctx.db.transform3d.insert({
-      localPosition: { x: 0, y: 0, z: 0 },
-      localQuaternion: { x: 0, y: 0, z: 0, w: 1 },
-      localScale: { x: 1, y: 1, z: 1 },
+      position: { x: 0, y: 0, z: 0 },
+      quaternion: { x: 0, y: 0, z: 0, w: 1 },
+      scale: { x: 1, y: 1, z: 1 },
       entityId: entityId,
       parentId: "",
-      // localMatrix: [
-      //   1, 0, 0, 0, // Row 1: X-axis + X-translation
-      //   0, 1, 0, 0, // Row 2: Y-axis + Y-translation
-      //   0, 0, 1, 0, // Row 3: Z-axis + Z-translation
-      //   0, 0, 0, 1 // Row 4: Perspective
-      // ],
-      // worldMatrix: [
-      //   1, 0, 0, 0, // Row 1: X-axis + X-translation
-      //   0, 1, 0, 0, // Row 2: Y-axis + Y-translation
-      //   0, 0, 1, 0, // Row 3: Z-axis + Z-translation
-      //   0, 0, 0, 1 // Row 4: Perspective
-      // ],
+      localMatrix: [
+        1, 0, 0, 0, // Row 1: X-axis + X-translation
+        0, 1, 0, 0, // Row 2: Y-axis + Y-translation
+        0, 0, 1, 0, // Row 3: Z-axis + Z-translation
+        0, 0, 0, 1 // Row 4: Perspective
+      ],
+      worldMatrix: [
+        1, 0, 0, 0, // Row 1: X-axis + X-translation
+        0, 1, 0, 0, // Row 2: Y-axis + Y-translation
+        0, 0, 1, 0, // Row 3: Z-axis + Z-translation
+        0, 0, 0, 1 // Row 4: Perspective
+      ],
       // children: [],
       isDirty: true,
-      localMatrix: undefined,
-      worldMatrix: undefined
+      // localMatrix: undefined,
+      // worldMatrix: undefined
     });
   }
 });
@@ -58,14 +58,6 @@ export const set_transform3d_parent = spacetimedb.reducer(
   const parent = ctx.db.transform3d.entityId.find(parentId)
   const child = ctx.db.transform3d.entityId.find(entityId)
   if(child){
-    // if(child.parentId){
-    //   const parented = ctx.db.transform3d.entityId.find(entityId);
-    //   if(parented){
-    //     parented.children=parented.children.filter(r=>r!=child.entityId)
-    //     ctx.db.transform3d.entityId.update(parented)
-    //   }
-    // }
-    // parent.children.push(child.entityId);
     if(parent){
       ctx.db.transform3d.entityId.update(parent)
       child.parentId = parentId;
@@ -85,12 +77,12 @@ export const transform3d_compute_local_matrix = spacetimedb.reducer(
     if(_transform3d){
       const mat = new THREE.Matrix4();
       mat.compose(
-        new THREE.Vector3(_transform3d.localPosition.x, _transform3d.localPosition.y, _transform3d.localPosition.z),
+        new THREE.Vector3(_transform3d.position.x, _transform3d.position.y, _transform3d.position.z),
         new THREE.Quaternion(
-          _transform3d.localQuaternion.x,
-          _transform3d.localQuaternion.y,
-          _transform3d.localQuaternion.z,
-          _transform3d.localQuaternion.w
+          _transform3d.quaternion.x,
+          _transform3d.quaternion.y,
+          _transform3d.quaternion.z,
+          _transform3d.quaternion.w
         ),
         // new THREE.Quaternion().setFromEuler(
         //   new THREE.Euler(
@@ -100,7 +92,7 @@ export const transform3d_compute_local_matrix = spacetimedb.reducer(
         //     'XYZ'
         //   )
         // ),
-        new THREE.Vector3(_transform3d.localScale.x, _transform3d.localScale.y, _transform3d.localScale.z)
+        new THREE.Vector3(_transform3d.scale.x, _transform3d.scale.y, _transform3d.scale.z)
       );
       _transform3d.localMatrix = mat.elements;
       ctx.db.transform3d.entityId.update(_transform3d)
@@ -113,20 +105,20 @@ function computeLocalMatrix(transform: any): THREE.Matrix4 {
   const mat = new THREE.Matrix4();
   mat.compose(
     new THREE.Vector3(
-      transform.localPosition.x,
-      transform.localPosition.y,
-      transform.localPosition.z
+      transform.position.x,
+      transform.position.y,
+      transform.position.z
     ),
     new THREE.Quaternion(
-      transform.localQuaternion.x,
-      transform.localQuaternion.y,
-      transform.localQuaternion.z,
-      transform.localQuaternion.w
+      transform.quaternion.x,
+      transform.quaternion.y,
+      transform.quaternion.z,
+      transform.quaternion.w
     ),
     new THREE.Vector3(
-      transform.localScale.x,
-      transform.localScale.y,
-      transform.localScale.z
+      transform.scale.x,
+      transform.scale.y,
+      transform.scale.z
     )
   );
   return mat;
@@ -280,12 +272,14 @@ export const set_transform3d_position = spacetimedb.reducer(
   const transform = ctx.db.transform3d.entityId.find(entityId);
   if(transform){
     console.log("update position");
-    transform.localPosition.x = x;
-    transform.localPosition.y = y;
-    transform.localPosition.z = z;
+    transform.position.x = x;
+    transform.position.y = y;
+    transform.position.z = z;
+    let mat = computeLocalMatrix(transform)
+    transform.localMatrix = mat.elements;
     transform.isDirty = true; // need to update if there children
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update
-    console.log(transform.localPosition)
+    console.log(transform.position)
     ctx.db.transform3d.entityId.update(transform)
   }
 });
@@ -310,10 +304,12 @@ export const set_transform3d_rotation = spacetimedb.reducer(
     // console.log("update rotation");
     // console.log(quat);
     // console.log("quat.x: ",quat.x);
-    transform.localQuaternion.x = quat.x;
-    transform.localQuaternion.y = quat.y;
-    transform.localQuaternion.z = quat.z;
-    transform.localQuaternion.w = quat.w;
+    transform.quaternion.x = quat.x;
+    transform.quaternion.y = quat.y;
+    transform.quaternion.z = quat.z;
+    transform.quaternion.w = quat.w;
+    let mat = computeLocalMatrix(transform)
+    transform.localMatrix = mat.elements;
     transform.isDirty = true; // need to update if there children
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update
     ctx.db.transform3d.entityId.update(transform);
@@ -328,11 +324,13 @@ export const set_transform3d_quaternion = spacetimedb.reducer(
   const transform = ctx.db.transform3d.entityId.find(entityId);
   if(transform){
     console.log("update position");
-    transform.localQuaternion.x = x;
-    transform.localQuaternion.y = y;
-    transform.localQuaternion.z = z;
-    transform.localQuaternion.w = w;
-    // console.log(transform.localPosition)
+    transform.quaternion.x = x;
+    transform.quaternion.y = y;
+    transform.quaternion.z = z;
+    transform.quaternion.w = w;
+    let mat = computeLocalMatrix(transform)
+    transform.localMatrix = mat.elements;
+    // console.log(transform.quaternion)
     transform.isDirty=true;
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update
     ctx.db.transform3d.entityId.update(transform)
@@ -347,12 +345,14 @@ export const set_transform3d_scale = spacetimedb.reducer(
   const transform = ctx.db.transform3d.entityId.find(entityId);
   if(transform){
     console.log("update position");
-    transform.localScale.x = x;
-    transform.localScale.y = y;
-    transform.localScale.z = z;
+    transform.scale.x = x;
+    transform.scale.y = y;
+    transform.scale.z = z;
+    let mat = computeLocalMatrix(transform)
+    transform.localMatrix = mat.elements;
     transform.isDirty = true; // need to update if there children
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update
-    console.log(transform.localPosition)
+    // console.log(transform.scale)
     ctx.db.transform3d.entityId.update(transform)
   }
 });
