@@ -4,9 +4,7 @@
 //-----------------------------------------------
 import spacetimedb from '../module';
 import { t, SenderError  } from 'spacetimedb/server';
-import { Transform2DResult, Vect2 } from '../types';
 import { 
-  type Matrix2D, 
   computeLocal2DMatrix, 
   extractPositionFromMatrix2D, 
   extractRotationFromMatrix2D, 
@@ -14,7 +12,8 @@ import {
   getParentWorldMatrix2D, 
   identity, 
   multiply2D 
-} from '../helper_transform2d';
+} from '../helpers/helper_transform2d';
+import { type Matrix2D, Transform2DResult, Vect2 } from '../types/types_transform2d';
 //-----------------------------------------------
 // GET TRANSFORM2D PARENT ID
 //-----------------------------------------------
@@ -44,6 +43,7 @@ export const get_local_transform2d = spacetimedb.procedure(
           position: undefined,
           rotation: undefined,
           scale: undefined,
+          parentId: undefined,
         };
       }
 
@@ -55,6 +55,7 @@ export const get_local_transform2d = spacetimedb.procedure(
         position: extractPositionFromMatrix2D(local),
         rotation: extractRotationFromMatrix2D(local),
         scale: extractScaleFromMatrix2D(local),
+        parentId:t2d.parentId ?? undefined,
       };
     });
   }
@@ -73,6 +74,7 @@ export const get_world_transform2d = spacetimedb.procedure(
           position: undefined,
           rotation: undefined,
           scale: undefined,
+          parentId: undefined,
         };
       }
 
@@ -87,6 +89,7 @@ export const get_world_transform2d = spacetimedb.procedure(
         position: extractPositionFromMatrix2D(worldMat),
         rotation: extractRotationFromMatrix2D(worldMat),
         scale: extractScaleFromMatrix2D(worldMat),
+        parentId: t2d.parentId ?? undefined,
       };
     });
   }

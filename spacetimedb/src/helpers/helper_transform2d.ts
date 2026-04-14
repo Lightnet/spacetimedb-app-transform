@@ -3,11 +3,12 @@
 //-----------------------------------------------
 // import { t, SenderError } from 'spacetimedb/server';
 
+import { type Matrix2D } from "../types/types_transform2d";
+
 //-----------------------------------------------
 // MATH
 //-----------------------------------------------
-// Matrix is now stored as a flat array: [a, b, c, d, e, f, 0, 0, 1]  (row-major, 3x3)
-export type Matrix2D = [number, number, number, number, number, number, number, number, number];
+
 export const identity: Matrix2D = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 
 export function translate2D(x: number, y: number): Matrix2D {

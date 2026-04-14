@@ -2,7 +2,7 @@
 // 
 //-----------------------------------------------
 import { table, t } from 'spacetimedb/server';
-import { Vect3, Quaternion } from '../types';
+import { Quat, Vect3 } from '../types/types_transform3d';
 //-----------------------------------------------
 // 
 //-----------------------------------------------
@@ -16,7 +16,7 @@ export const transform3d = table(
     parentId: t.string().optional(),
     isDirty:t.bool().default(true),
     position: Vect3,
-    quaternion: Quaternion,
+    quaternion: Quat,
     scale: Vect3,
     localMatrix: t.array(t.f32()).optional(),
     worldMatrix: t.array(t.f32()).optional(),

@@ -3,8 +3,8 @@
 //-----------------------------------------------
 import { t, SenderError } from 'spacetimedb/server';
 import spacetimedb from '../module';
-import { computeLocal2DMatrix, getParentWorldMatrix2D, multiply2D } from '../helper_transform2d';
-import { Vect2 } from '../types';
+import { computeLocal2DMatrix, getParentWorldMatrix2D, multiply2D } from '../helpers/helper_transform2d';
+import { Vect2 } from '../types/types_transform2d';
 //-----------------------------------------------
 // CLEAR ALL TRANSFORM 2Ds
 //-----------------------------------------------

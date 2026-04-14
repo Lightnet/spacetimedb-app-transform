@@ -17,7 +17,7 @@ export const mat4Identity = (): Mat4 => [
   0, 0, 0, 1
 ];
 
-export function computeLocalMatrix(transform: { 
+export function computeLocalMatrix3D(transform: { 
   position: Vec3; 
   quaternion: Quat; 
   scale: Vec3 

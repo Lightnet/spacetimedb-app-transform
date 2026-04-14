@@ -3,13 +3,14 @@
 //-----------------------------------------------
 import { t, SenderError } from 'spacetimedb/server';
 import spacetimedb from '../module';
-import { Quaternion, Vect3 } from '../types';
 import { 
-  computeLocalMatrix, 
+  computeLocalMatrix3D, 
   multiplyMatrices,
   quaternionFromEulerXYZ, 
 } from '../helpers/helper_transform3d';
 import { 
+  Quat,
+  Vect3,
   type Mat4,
 } from '../types/types_transform3d';
 
@@ -20,7 +21,7 @@ export const add_entity_transform3d = spacetimedb.reducer(
   {
     entityId: t.string(),
     position: t.option(Vect3),      // ← option
-    quaternion: t.option(Quaternion), // ← option
+    quaternion: t.option(Quat), // ← option
     scale: t.option(Vect3),         // ← option
     parentId: t.option(t.string()), // ← extra useful field
   },
@@ -41,7 +42,7 @@ export const add_entity_transform3d = spacetimedb.reducer(
     const safeParentId = parentId ?? "";
 
     // Compute local matrix from the (possibly provided) values
-    const localMat = computeLocalMatrix({
+    const localMat = computeLocalMatrix3D({
       position: safePosition,
       quaternion: safeQuaternion,
       scale: safeScale,
@@ -95,7 +96,7 @@ export const transform3d_compute_local_matrix = spacetimedb.reducer(
   (ctx, { id }) => {
     const _transform3d = ctx.db.transform3d.entityId.find(id);
     if(_transform3d){
-      let mat = computeLocalMatrix(_transform3d)
+      let mat = computeLocalMatrix3D(_transform3d)
       // console.log(mat);
       _transform3d.localMatrix = mat;
       ctx.db.transform3d.entityId.update(_transform3d)
@@ -196,20 +197,20 @@ export const update_all_transform3ds = spacetimedb.reducer((ctx) => {
 
     if (!transform.parentId || transform.parentId === "") {
       // Root transform
-      worldMat = computeLocalMatrix(transform);
+      worldMat = computeLocalMatrix3D(transform);
     } else {
       // Child transform - use parent's worldMatrix (parent should already be updated)
       const parent = ctx.db.transform3d.entityId.find(transform.parentId);
       if (parent?.worldMatrix) {
         // const parentWorld = new THREE.Matrix4().fromArray(parent.worldMatrix);
-        // const localMat = computeLocalMatrix(transform);
+        // const localMat = computeLocalMatrix3D(transform);
         // worldMat = parentWorld.clone().multiply(localMat);
         const parentWorld = parent.worldMatrix as Mat4;
-        const localMat = computeLocalMatrix(transform);
+        const localMat = computeLocalMatrix3D(transform);
         worldMat = multiplyMatrices(parentWorld, localMat);
 
       } else {
-        worldMat = computeLocalMatrix(transform);
+        worldMat = computeLocalMatrix3D(transform);
       }
     }
 
@@ -245,7 +246,7 @@ export const set_transform3d_position = spacetimedb.reducer(
     transform.position.x = x;
     transform.position.y = y;
     transform.position.z = z;
-    let mat = computeLocalMatrix(transform)
+    let mat = computeLocalMatrix3D(transform)
     transform.localMatrix = mat;
     transform.isDirty = true; // need to update if there children
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update
@@ -275,7 +276,7 @@ export const set_transform3d_rotation = spacetimedb.reducer(
     transform.quaternion.w = quat.w;
 
     // Recompute local matrix
-    const localMat = computeLocalMatrix(transform);
+    const localMat = computeLocalMatrix3D(transform);
     transform.localMatrix = localMat as any;   // or localMat (if you change type to number[])
 
     // Mark dirty for hierarchy update
@@ -300,7 +301,7 @@ export const set_transform3d_quaternion = spacetimedb.reducer(
     transform.quaternion.y = y;
     transform.quaternion.z = z;
     transform.quaternion.w = w;
-    let mat = computeLocalMatrix(transform)
+    let mat = computeLocalMatrix3D(transform)
     transform.localMatrix = mat;
     // console.log(transform.quaternion)
     transform.isDirty=true;
@@ -320,7 +321,7 @@ export const set_transform3d_scale = spacetimedb.reducer(
     transform.scale.x = x;
     transform.scale.y = y;
     transform.scale.z = z;
-    let mat = computeLocalMatrix(transform)
+    let mat = computeLocalMatrix3D(transform)
     transform.localMatrix = mat;
     transform.isDirty = true; // need to update if there children
     markSubtreeDirty(ctx, entityId);   // ← link transforms to update

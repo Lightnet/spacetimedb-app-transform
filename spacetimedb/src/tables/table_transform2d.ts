@@ -2,7 +2,7 @@
 // 
 //-----------------------------------------------
 import { table, t } from 'spacetimedb/server';
-import { Vect2 } from '../types';
+import { Vect2 } from '../types/types_transform2d';
 //-----------------------------------------------
 // 
 //-----------------------------------------------
