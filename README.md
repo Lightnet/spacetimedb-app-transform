@@ -3,7 +3,8 @@
 # License: MIT
 
 # Status:
--  Work in progress.
+- Work in progress.
+- Working on the short name functions.
 
 # Program Languages:
 - Typescript ( server )
@@ -74,6 +75,7 @@
 - [x] still need to test more
 - [x] transform 3D hierarchy
   - [x] set / get transform3d
+  - [x] get matrix
   - [x] set / get position 
   - [x] set / get quaternion 
   - [x] set / get rotation 
@@ -81,6 +83,7 @@
   - [x] parent to child update. 
 - [x] transform 2D hierarchy
   - [x] set / get transform3d
+  - [x] get matrix
   - [x] set / get position
   - [x] set / get rotation
   - [x] set / get scale

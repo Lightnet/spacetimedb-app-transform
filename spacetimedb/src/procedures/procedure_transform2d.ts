@@ -17,27 +17,27 @@ import { type Matrix2D, Transform2DResult, Vect2 } from '../types/types_transfor
 //-----------------------------------------------
 // GET TRANSFORM2D PARENT ID
 //-----------------------------------------------
-export const get_transform2d_parent_id = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_parent = spacetimedb.procedure(
+  { id: t.string() },
   t.option( t.string() ),
   // t.option(t.object({ x: t.f64(), y: t.f64() })),// nope
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) return undefined;
       return t2d.parentId ?? undefined;
     });
   }
 );
 //-----------------------------------------------
-// GET TRANSFORM 2D LOCAL POSITION, ROTATION AND SCALE
+// GET TRANSFORM 2D LOCAL POSITION, ROTATION, SCALE, MATRIX and PARENT ID
 //-----------------------------------------------
-export const get_local_transform2d = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_local = spacetimedb.procedure(
+  { id: t.string() },
   Transform2DResult,   // reuse the same return type
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) {
         return {
           position: undefined,
@@ -65,12 +65,12 @@ export const get_local_transform2d = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 2D LOCAL MATRIX
 //-----------------------------------------------
-export const get_local_transform2d_matrix = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_local_matrix = spacetimedb.procedure(
+  { id: t.string() },
   t.option(t.array(t.f64())),   // ← return type
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) {
         return undefined
       }
@@ -81,12 +81,12 @@ export const get_local_transform2d_matrix = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 2D WORLD POSITION, ROTATION AND SCALE
 //-----------------------------------------------
-export const get_world_transform2d = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_world = spacetimedb.procedure(
+  { id: t.string() },
   Transform2DResult,   // ← return type
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) {
         return {
           position: undefined,
@@ -117,12 +117,12 @@ export const get_world_transform2d = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 2D WORLD MATRIX
 //-----------------------------------------------
-export const get_world_transform2d_matrix = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_world_matrix = spacetimedb.procedure(
+  { id: t.string() },
   t.option(t.array(t.f64())),   // ← return type
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) {
         return undefined
       }
@@ -130,17 +130,16 @@ export const get_world_transform2d_matrix = spacetimedb.procedure(
     });
   }
 );
-
 //-----------------------------------------------
 // GET LOCAL POSITION 2D
 //-----------------------------------------------
-export const get_local_position_2d = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_local_pos = spacetimedb.procedure(
+  { id: t.string() },
   t.option( Vect2 ),
   // t.option(t.object({ x: t.f64(), y: t.f64() })),// nope
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) return undefined;
 
       const local = t2d.isDirty 
@@ -154,13 +153,13 @@ export const get_local_position_2d = spacetimedb.procedure(
 //-----------------------------------------------
 // GET WORLD POSITION 2D
 //-----------------------------------------------
-export const get_world_position_2d = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_world_pos = spacetimedb.procedure(
+  { id: t.string() },
   t.option( Vect2 ),
   // t.option(t.object({ x: t.f64(), y: t.f64() })),// nope
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) return undefined;
 
       const local = t2d.isDirty 
@@ -177,12 +176,12 @@ export const get_world_position_2d = spacetimedb.procedure(
 //-----------------------------------------------
 // GET LOCAL ROTATION 2D 
 //-----------------------------------------------
-export const get_local_rotation_2d = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_local_rot = spacetimedb.procedure(
+  { id: t.string() },
   t.option( t.f64() ),
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) return undefined;
 
       const local = t2d.isDirty 
@@ -195,12 +194,12 @@ export const get_local_rotation_2d = spacetimedb.procedure(
 //-----------------------------------------------
 // GET WORLD ROTATION 2D 
 //-----------------------------------------------
-export const get_world_rotation_2d = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_world_rot = spacetimedb.procedure(
+  { id: t.string() },
   t.option( t.f64() ),
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) return undefined;
 
       const local = t2d.isDirty 
@@ -216,14 +215,13 @@ export const get_world_rotation_2d = spacetimedb.procedure(
 //-----------------------------------------------
 // GET LOCAL SCALE 2D 
 //-----------------------------------------------
-export const get_local_scale_2d = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_local_scale = spacetimedb.procedure(
+  { id: t.string() },
   t.option( Vect2 ),
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) return undefined;
-
       const local = t2d.isDirty 
         ? computeLocal2DMatrix(t2d) 
         : (t2d.localMatrix as Matrix2D) ?? identity;
@@ -234,12 +232,12 @@ export const get_local_scale_2d = spacetimedb.procedure(
 //-----------------------------------------------
 // GET WORLD SCALE 2D 
 //-----------------------------------------------
-export const get_world_scale_2d = spacetimedb.procedure(
-  { entityId: t.string() },
+export const get_tr2_world_scale = spacetimedb.procedure(
+  { id: t.string() },
   t.option( Vect2 ),
-  (ctx, { entityId }) => {
+  (ctx, { id }) => {
     return ctx.withTx((tx) => {
-      const t2d = tx.db.transform2d.entityId.find(entityId);
+      const t2d = tx.db.transform2d.entityId.find(id);
       if (!t2d) return undefined;
 
       const local = t2d.isDirty 

@@ -46,9 +46,9 @@ function markSubtreeDirty2D(ctx: any, rootEntityId: string) {
 // ADD ENTITY TRANSFORM 2D
 //-----------------------------------------------
 export const add_entity_transform2d = spacetimedb.reducer(
-  { entityId: t.string() }, 
-  (ctx, { entityId }) => {
-  const _transform2d = ctx.db.transform2d.entityId.find(entityId);
+  { id: t.string() }, 
+  (ctx, { id }) => {
+  const _transform2d = ctx.db.transform2d.entityId.find(id);
   console.log("transform: ", _transform2d)
   if(!_transform2d){
     console.log("add transform 2d");
@@ -56,7 +56,7 @@ export const add_entity_transform2d = spacetimedb.reducer(
       position: { x: 0, y: 0},
       rotation: 0, //degree
       scale: { x: 1, y: 1 },
-      entityId: entityId,
+      entityId: id,
       parentId: "",
       isDirty: true,
       localMatrix: [
@@ -76,18 +76,18 @@ export const add_entity_transform2d = spacetimedb.reducer(
 // REMOVE ENTITY TRANSFORM 2D
 //-----------------------------------------------
 export const remove_entity_transform2d = spacetimedb.reducer(
-  { entityId: t.string() }, 
-  (ctx, { entityId }) => {
-    ctx.db.transform2d.entityId.delete(entityId);
-    console.log("delete transform2d id:", entityId)
+  { id: t.string() }, 
+  (ctx, { id }) => {
+    ctx.db.transform2d.entityId.delete(id);
+    console.log("delete transform2d id:", id)
 });
 //-----------------------------------------------
 // SET TRANSFORM 2D PARENT
 //-----------------------------------------------
 export const set_transform2d_parent = spacetimedb.reducer(
-  { entityId: t.string(), parentId: t.string() }, 
-  (ctx, { entityId, parentId }) => {
-    const child = ctx.db.transform2d.entityId.find(entityId);
+  { id: t.string(), parentId: t.string() }, 
+  (ctx, { id, parentId }) => {
+    const child = ctx.db.transform2d.entityId.find(id);
     if (!child) return;
 
     const parent = ctx.db.transform2d.entityId.find(parentId);
@@ -95,15 +95,15 @@ export const set_transform2d_parent = spacetimedb.reducer(
 
     child.isDirty = true;                    // ← add this
     ctx.db.transform2d.entityId.update(child);
-    markSubtreeDirty2D(ctx, entityId);       // ← add this
+    markSubtreeDirty2D(ctx, id);       // ← add this
 });
 //-----------------------------------------------
 // SET TRANSFORM 2D POSITION, ROTATION AND SCALE
 //-----------------------------------------------
 export const set_transform2d = spacetimedb.reducer(
-  { entityId: t.string(), position:Vect2, rotation:t.f64(), scale:Vect2}, 
-  (ctx, { entityId, position, rotation, scale}) => {
-  const t2d = ctx.db.transform2d.entityId.find(entityId);
+  { id: t.string(), position:Vect2, rotation:t.f64(), scale:Vect2}, 
+  (ctx, { id, position, rotation, scale}) => {
+  const t2d = ctx.db.transform2d.entityId.find(id);
   if(t2d){
     console.log("update 2d position, rotation and scale");
     t2d.position.x = position.x;
@@ -115,7 +115,7 @@ export const set_transform2d = spacetimedb.reducer(
     t2d.localMatrix = computeLocal2DMatrix(t2d);
     t2d.isDirty = true;
     ctx.db.transform2d.entityId.update(t2d);
-    markSubtreeDirty2D(ctx, entityId);
+    markSubtreeDirty2D(ctx, id);
     update_all_transform2d(ctx,{});
   }
 });
@@ -123,9 +123,9 @@ export const set_transform2d = spacetimedb.reducer(
 // SET TRANSFORM 2D POSITION
 //-----------------------------------------------
 export const set_transform2d_position = spacetimedb.reducer(
-  { entityId: t.string(),x:t.f64(), y:t.f64()}, 
-  (ctx, { entityId, x, y}) => {
-  const t2d = ctx.db.transform2d.entityId.find(entityId);
+  { id: t.string(),x:t.f64(), y:t.f64()}, 
+  (ctx, { id, x, y}) => {
+  const t2d = ctx.db.transform2d.entityId.find(id);
   if(t2d){
     console.log("update position2d");
     t2d.position.x = x;
@@ -133,7 +133,7 @@ export const set_transform2d_position = spacetimedb.reducer(
     t2d.localMatrix  = computeLocal2DMatrix(t2d);
     t2d.isDirty = true;
     ctx.db.transform2d.entityId.update(t2d);
-    markSubtreeDirty2D(ctx, entityId);
+    markSubtreeDirty2D(ctx, id);
     // _transform2d.worldMatrix = localMatrix;
     // console.log(_transform2d.position)
     update_all_transform2d(ctx,{});
@@ -143,16 +143,16 @@ export const set_transform2d_position = spacetimedb.reducer(
 // SET TRANSFORM 2D ROTATION
 //-----------------------------------------------
 export const set_transform2d_rotation = spacetimedb.reducer(
-  { entityId: t.string(), rotation:t.f64()}, 
-  (ctx, { entityId, rotation}) => {
-  const t2d = ctx.db.transform2d.entityId.find(entityId);
+  { id: t.string(), rotation:t.f64()}, 
+  (ctx, { id, rotation}) => {
+  const t2d = ctx.db.transform2d.entityId.find(id);
   if(t2d){
     console.log("update position2d");
     t2d.rotation = rotation;
     t2d.localMatrix = computeLocal2DMatrix(t2d);
     t2d.isDirty = true;
     ctx.db.transform2d.entityId.update(t2d);
-    markSubtreeDirty2D(ctx, entityId);
+    markSubtreeDirty2D(ctx, id);
     update_all_transform2d(ctx,{});
   }
 });
@@ -160,9 +160,9 @@ export const set_transform2d_rotation = spacetimedb.reducer(
 // SET TRANSFORM 2D SCALE
 //-----------------------------------------------
 export const set_transform2d_scale = spacetimedb.reducer(
-  { entityId: t.string(),x:t.f64(), y:t.f64()}, 
-  (ctx, { entityId, x, y}) => {
-  const t2d = ctx.db.transform2d.entityId.find(entityId);
+  { id: t.string(),x:t.f64(), y:t.f64()}, 
+  (ctx, { id, x, y}) => {
+  const t2d = ctx.db.transform2d.entityId.find(id);
   if(t2d){
     console.log("update position2d");
     t2d.scale.x = x;
@@ -170,7 +170,7 @@ export const set_transform2d_scale = spacetimedb.reducer(
     t2d.localMatrix  = computeLocal2DMatrix(t2d);
     t2d.isDirty = true;
     ctx.db.transform2d.entityId.update(t2d)
-    markSubtreeDirty2D(ctx, entityId);
+    markSubtreeDirty2D(ctx, id);
     update_all_transform2d(ctx,{});
     // _transform2d.worldMatrix = localMatrix;
   }
