@@ -43,6 +43,7 @@ export const get_local_transform2d = spacetimedb.procedure(
           position: undefined,
           rotation: undefined,
           scale: undefined,
+          matrix: undefined,
           parentId: undefined,
         };
       }
@@ -55,8 +56,25 @@ export const get_local_transform2d = spacetimedb.procedure(
         position: extractPositionFromMatrix2D(local),
         rotation: extractRotationFromMatrix2D(local),
         scale: extractScaleFromMatrix2D(local),
+        matrix: t2d.localMatrix ?? undefined,
         parentId:t2d.parentId ?? undefined,
       };
+    });
+  }
+);
+//-----------------------------------------------
+// GET TRANSFORM 2D LOCAL MATRIX
+//-----------------------------------------------
+export const get_local_transform2d_matrix = spacetimedb.procedure(
+  { entityId: t.string() },
+  t.option(t.array(t.f64())),   // ← return type
+  (ctx, { entityId }) => {
+    return ctx.withTx((tx) => {
+      const t2d = tx.db.transform2d.entityId.find(entityId);
+      if (!t2d) {
+        return undefined
+      }
+      return t2d.localMatrix ?? undefined; 
     });
   }
 );
@@ -74,6 +92,7 @@ export const get_world_transform2d = spacetimedb.procedure(
           position: undefined,
           rotation: undefined,
           scale: undefined,
+          matrix: undefined,
           parentId: undefined,
         };
       }
@@ -89,11 +108,29 @@ export const get_world_transform2d = spacetimedb.procedure(
         position: extractPositionFromMatrix2D(worldMat),
         rotation: extractRotationFromMatrix2D(worldMat),
         scale: extractScaleFromMatrix2D(worldMat),
+        matrix: t2d.worldMatrix ?? undefined,
         parentId: t2d.parentId ?? undefined,
       };
     });
   }
 );
+//-----------------------------------------------
+// GET TRANSFORM 2D WORLD MATRIX
+//-----------------------------------------------
+export const get_world_transform2d_matrix = spacetimedb.procedure(
+  { entityId: t.string() },
+  t.option(t.array(t.f64())),   // ← return type
+  (ctx, { entityId }) => {
+    return ctx.withTx((tx) => {
+      const t2d = tx.db.transform2d.entityId.find(entityId);
+      if (!t2d) {
+        return undefined
+      }
+      return t2d.worldMatrix ?? undefined; 
+    });
+  }
+);
+
 //-----------------------------------------------
 // GET LOCAL POSITION 2D
 //-----------------------------------------------

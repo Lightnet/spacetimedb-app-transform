@@ -18,5 +18,6 @@ export const Transform2DResult = t.object('Transform2DResult',{
   position: t.option(Vect2),
   rotation: t.option(t.f64()),
   scale: t.option(Vect2),
+  matrix: t.option(t.array(t.f64())),
   parentId:t.option(t.string())
 });

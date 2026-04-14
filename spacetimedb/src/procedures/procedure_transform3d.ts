@@ -11,7 +11,22 @@ import {
   Vect3,
 } from '../types/types_transform3d';
 import { decomposeMatrix, eulerFromQuaternion, radToDeg } from '../helpers/helper_transform3d';
-
+//-----------------------------------------------
+// GET TRANSFORM 3D LOCAL MATRIX
+//-----------------------------------------------
+export const get_transform3d_parent = spacetimedb.procedure(
+  { id: t.string() },
+  t.option( t.string() ),
+  (ctx, { id }) => {
+    return ctx.withTx((tx) => {
+      const t3d = tx.db.transform3d.entityId.find(id);
+      if(t3d){
+        console.log(t3d?.parentId);
+        return t3d.parentId ?? undefined;
+      }
+      return undefined;
+  });
+});
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL MATRIX
 //-----------------------------------------------

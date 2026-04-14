@@ -129,9 +129,9 @@ const PARAMS = {
   t2_scale:{x:1,y:1},
 
 
-  w2_position:{x:0,y:0,z:0},
-  w2_rotation:{x:0,y:0,z:0},
-  w2_scale:{x:1,y:1,z:1},
+  w2_position:{x:0,y:0},
+  w2_rotation:0,
+  w2_scale:{x:1,y:1},
 }
 
 //-----------------------------------------------
@@ -601,6 +601,7 @@ update_entities_list();
 const component3DFolder = pane.addFolder({
   title: 'Component 3D',
 });
+component3DFolder.expanded = false;
 const transform3dFolder = component3DFolder.addFolder({
   title: 'Transform 3D',
 });
@@ -819,7 +820,6 @@ worldTransform3DFolder.addBinding(PARAMS, 'w3_scale',{label:'Scale',disabled:tru
 const component2DFolder = pane.addFolder({
   title: 'Component 2D ',
 });
-
 let transform2DFolder = component2DFolder.addFolder({
   title: 'Transform 2D',
 });
@@ -898,27 +898,54 @@ function update_hierarchy_parent(){
 localTransform2DFolder = component2DFolder.addFolder({
   title: 'Local Transform 2D',
 });
-position2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_position',{label:'Position'}).on('change',()=>{
+position2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_position',{label:'Position'}).on('change', async()=>{
   // console.log("change position")
   conn.reducers.setTransform2DPosition({
     entityId:PARAMS.entityId,
     x:PARAMS.t2_position.x,
     y:PARAMS.t2_position.y
   });
+  const pos = await conn.procedures.getWorldPosition2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("pos:", pos)
+  if(pos){
+    console.log("update pos...")
+    PARAMS.w2_position.x = pos.x;
+    PARAMS.w2_position.y = pos.y;
+  }
+  if (worldTransform2DFolder) worldTransform2DFolder.refresh();
 })
-rotation2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_rotation',{label:'Rotation'}).on('change',()=>{
+rotation2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_rotation',{label:'Rotation'}).on('change', async()=>{
   conn.reducers.setTransform2DRotation({
     entityId:PARAMS.entityId,
     // rotation: degreeToRadians(PARAMS.t2_rotation)
     rotation: PARAMS.t2_rotation
-  })
+  });
+  const rot = await conn.procedures.getWorldRotation2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("rot:", rot);
+  if(rot){
+    PARAMS.w2_rotation = rot;
+  }
+  worldTransform2DFolder.refresh();
 })
-scale2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_scale',{label:'Scale'}).on('change',()=>{
+scale2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_scale',{label:'Scale'}).on('change', async()=>{
   conn.reducers.setTransform2DScale({
     entityId:PARAMS.entityId,
     x:PARAMS.t2_scale.x,
     y:PARAMS.t2_scale.y
-  })
+  });
+  const scale = await conn.procedures.getWorldScale2D({
+    entityId:PARAMS.entityId
+  });
+  console.log("scale:", scale);
+  if(scale){
+    console.log("update scale...")
+    PARAMS.w2_scale = scale;
+  }
+  worldTransform2DFolder.refresh();
 })
 //-----------------------------------------------
 // WORLD TRANSFORM 2D
@@ -929,7 +956,6 @@ worldTransform2DFolder = component2DFolder.addFolder({
 worldTransform2DFolder.addBinding(PARAMS, 'w2_position',{label:'Position', disabled:true});
 worldTransform2DFolder.addBinding(PARAMS, 'w2_rotation',{label:'Rotation', disabled:true});
 worldTransform2DFolder.addBinding(PARAMS, 'w2_scale',{label:'Scale', disabled:true});
-
 //-----------------------------------------------
 // 
 //-----------------------------------------------
@@ -940,25 +966,34 @@ const testPane = new Pane({container:testEl});
 const testFolder = testPane.addFolder({
   title: 'Test',
 });
-testFolder.expanded = false;
-
+// testFolder.expanded = false;
 const t3Folder = testFolder.addFolder({
   title: 'Transform3D',
 });
-
+t3Folder.expanded = false;
+t3Folder.addButton({title:'get parent'}).on('click',async()=>{
+  const t2dParent = await conn.procedures.getTransform3DParent({
+    id:PARAMS.entityId
+  })
+  console.log("t2dParent: ", t2dParent)
+});
 const localt3Folder = t3Folder.addFolder({
   title: 'local Transform3D',
 });
-
 const worldt3Folder = t3Folder.addFolder({
   title: 'world Transform3D',
 });
-
 localt3Folder.addButton({title:'get local'}).on('click', async ()=>{
   const transform2d = await conn.procedures.getTransform3DLocal({
     id:PARAMS.entityId
   })
   console.log("local transform2d: ", transform2d)
+});
+localt3Folder.addButton({title:'get local matrix'}).on('click', async ()=>{
+  const mat = await conn.procedures.getTransform3DLocalMatrix({
+    id:PARAMS.entityId
+  })
+  console.log("mattix: ", mat)
 });
 localt3Folder.addButton({title:'get position'}).on('click', async ()=>{
   const pos = await conn.procedures.getTransform3DLocalPosition({
@@ -990,6 +1025,12 @@ worldt3Folder.addButton({title:'get world'}).on('click', async ()=>{
   })
   console.log("world transform3d: ", t3d)
 });
+worldt3Folder.addButton({title:'get world matrix'}).on('click', async ()=>{
+  const mat = await conn.procedures.getTransform3DWorldMatrix({
+    id:PARAMS.entityId
+  })
+  console.log("mattix: ", mat)
+});
 worldt3Folder.addButton({title:'get position'}).on('click', async ()=>{
   const pos = await conn.procedures.getTransform3DWorldPosition({
     id:PARAMS.entityId
@@ -1014,36 +1055,110 @@ worldt3Folder.addButton({title:'get scale'}).on('click', async ()=>{
   })
   console.log("local scale: ", scale)
 });
-
 t3Folder.addButton({title:'transform3d list'}).on('click',()=>{
   console.log(PARAMS.transform3d);
 });
-
 t3Folder.addButton({title:'update all transforms'}).on('click',()=>{
   conn.reducers.updateAllTransform3Ds();
 });
-
 t3Folder.addButton({title:'set all transforms null'}).on('click',()=>{
   conn.reducers.updateAllTransform3DsNull();
 });
-
 testFolder.addButton({title:'clear transforms'}).on('click',()=>{
   conn.reducers.clearAllTransform2Ds();
   conn.reducers.clearAllTransform3Ds();
 });
-
+//-----------------------------------------------
+// TRANSFORM 2D
+//-----------------------------------------------
 const t2Folder = testFolder.addFolder({
   title: 'Transform2D',
 });
-t2Folder.addButton({title:'get transform3d local matrix'}).on('click', async ()=>{
-  const mat = await conn.procedures.getTransform3DLocalMatrix({
-    id:PARAMS.entityId
+
+t2Folder.addButton({title:'get parent'}).on('click',async()=>{
+  const t2dParent = await conn.procedures.getTransform2DParentId({
+    entityId:PARAMS.entityId
   })
-  console.log("mattix: ", mat)
+  console.log("t2dParent: ", t2dParent)
 });
-t2Folder.addButton({title:'get transform3d world matrix'}).on('click', async ()=>{
-  const mat = await conn.procedures.getTransform3DWorldMatrix({
-    id:PARAMS.entityId
+
+const localt2Folder = t2Folder.addFolder({
+  title: 'Local Transform 2D',
+});
+
+localt2Folder.addButton({title:'get transform'}).on('click',async()=>{
+  const t2d = await conn.procedures.getLocalTransform2D({
+    entityId:PARAMS.entityId
   })
-  console.log("mattix: ", mat)
+  console.log("local t2d: ", t2d)
 });
+
+localt2Folder.addButton({title:'get matrix'}).on('click',async()=>{
+  const matrix = await conn.procedures.getLocalTransform2DMatrix({
+    entityId:PARAMS.entityId
+  })
+  console.log("local matrix: ", matrix)
+});
+
+localt2Folder.addButton({title:'get position'}).on('click',async()=>{
+  const pos = await conn.procedures.getLocalPosition2D({
+    entityId:PARAMS.entityId
+  })
+  console.log("local pos: ", pos)
+});
+
+localt2Folder.addButton({title:'get rotation'}).on('click',async()=>{
+  const rot = await conn.procedures.getLocalRotation2D({
+    entityId:PARAMS.entityId
+  })
+  console.log("local rot: ", rot)
+});
+
+localt2Folder.addButton({title:'get scale'}).on('click',async()=>{
+  const scale = await conn.procedures.getLocalScale2D({
+    entityId:PARAMS.entityId
+  })
+  console.log("local scale: ", scale)
+});
+
+const worldt2Folder = t2Folder.addFolder({
+  title: 'World Transform 2D',
+});
+
+worldt2Folder.addButton({title:'get transform'}).on('click',async()=>{
+  const t2d = await conn.procedures.getWorldTransform2D({
+    entityId:PARAMS.entityId
+  })
+  console.log("world t2d: ", t2d)
+});
+
+worldt2Folder.addButton({title:'get matrix'}).on('click',async()=>{
+  const matrix = await conn.procedures.getWorldTransform2DMatrix({
+    entityId:PARAMS.entityId
+  })
+  console.log("world matrix: ", matrix)
+});
+
+worldt2Folder.addButton({title:'get position'}).on('click',async()=>{
+  const pos = await conn.procedures.getWorldPosition2D({
+    entityId:PARAMS.entityId
+  })
+  console.log("world pos: ", pos)
+});
+
+worldt2Folder.addButton({title:'get rotation'}).on('click',async()=>{
+  const rotation = await conn.procedures.getWorldRotation2D({
+    entityId:PARAMS.entityId
+  })
+  console.log("world rotation: ", rotation)
+});
+
+worldt2Folder.addButton({title:'get scale'}).on('click',async()=>{
+  const scale = await conn.procedures.getWorldScale2D({
+    entityId:PARAMS.entityId
+  })
+  console.log("world scale: ", scale)
+});
+
+
+
