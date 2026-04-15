@@ -1,5 +1,5 @@
 {
-  "name": "spacetime-app-transform",
+  "name": "spacetimedb-oasis",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -16,10 +16,13 @@
     "spacetimedb": "^2.1.0",
     "three": "^0.183.2",
     "three-viewport-gizmo": "^2.2.0",
+    "tweakpane": "^4.0.5",
     "vanjs-core": "^1.6.0",
     "vanjs-ui": "^0.11.14"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/three": "^0.183.1",
     "typescript": "^5.9.3",
     "vite": "^8.0.0"
   }

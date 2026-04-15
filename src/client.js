@@ -3,7 +3,8 @@
 //-----------------------------------------------
 import { connState, networkStatus, userIdentity } from './context';
 import { DbConnection, tables } from './module_bindings';
-import { Pane } from 'https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js';
+// import { Pane } from 'https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js';
+import { Pane } from 'tweakpane';
 import van from "vanjs-core";
 import { Modal, MessageBoard } from "vanjs-ui";
 // import { windowRegister } from './window_register';
@@ -486,6 +487,18 @@ van.add(document.body, App())
 //-----------------------------------------------
 // TWEAKPANE
 //-----------------------------------------------
+function togglePanel(key){
+  // 1. Get the current value (returns a string "true", "false", or null)
+  const currentValue = localStorage.getItem(key) === 'true';
+  // 2. Toggle the value
+  const newValue = !currentValue;
+  // 3. Save it back as a string
+  localStorage.setItem(key, newValue);
+  console.log('key:', key, " toggle:", newValue)
+  return newValue;
+}
+
+
 const pane = new Pane();
 //-----------------------------------------------
 // ENTITY
@@ -600,6 +613,17 @@ const component3DFolder = pane.addFolder({
   title: 'Component 3D',
 });
 // component3DFolder.expanded = false;
+if(component3DFolder){
+  let currentTheme = localStorage.getItem('component3DFolder');
+  console.log(currentTheme);
+  if(currentTheme=='true'){
+    component3DFolder.expanded = true;
+  }else{
+    component3DFolder.expanded = false;
+  }
+}
+
+
 const transform3dFolder = component3DFolder.addFolder({
   title: 'Transform 3D',
 });
@@ -818,7 +842,19 @@ worldTransform3DFolder.addBinding(PARAMS, 'w3_scale',{label:'Scale',disabled:tru
 const component2DFolder = pane.addFolder({
   title: 'Component 2D ',
 });
-component2DFolder.expanded = false;
+// component2DFolder.expanded = false;
+if(component2DFolder){
+  let currentTheme = localStorage.getItem('component2DFolder');
+  console.log(currentTheme);
+  if(currentTheme=='true'){
+    component2DFolder.expanded = true;
+  }else{
+    component2DFolder.expanded = false;
+  }
+}
+
+
+
 let transform2DFolder = component2DFolder.addFolder({
   title: 'Transform 2D',
 });
@@ -961,13 +997,42 @@ worldTransform2DFolder.addBinding(PARAMS, 'w2_scale',{label:'Scale', disabled:tr
 //-----------------------------------------------
 // TEST
 //-----------------------------------------------
+
+
 const testEl = div({style:`position:fixed; top:2px; left:2px;`})
 van.add(document.body, testEl);
 const testPane = new Pane({container:testEl});
+
+
 // testPane.expanded = false;
 const testFolder = testPane.addFolder({
   title: 'Test',
 });
+if(testFolder){
+  let currentTheme = localStorage.getItem('testPane');
+  console.log(currentTheme);
+  if(currentTheme=='true'){
+    testFolder.expanded = true;
+  }else{
+    testFolder.expanded = false;
+  }
+}
+
+testFolder.addButton({title:'toggle test'}).on('click', async ()=>{
+  togglePanel('testPane');
+});
+
+testFolder.addButton({title:'toggle 3DFolder'}).on('click', async ()=>{
+  togglePanel('component3DFolder');
+});
+
+
+testFolder.addButton({title:'toggle 2DFolder'}).on('click', async ()=>{
+  togglePanel('component2DFolder');
+});
+
+
+
 // testFolder.expanded = false;
 const t3Folder = testFolder.addFolder({
   title: 'Transform3D',
@@ -1162,6 +1227,4 @@ worldt2Folder.addButton({title:'get scale'}).on('click',async()=>{
   })
   console.log("world scale: ", scale)
 });
-
-
 
