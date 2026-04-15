@@ -399,124 +399,140 @@ conn.reducers.updateAllTransform3DsNull();
 ```
   This is to clear out the matrix for tests.
 
-
-
 ## Transform 2D:
  There are get and set function for transform 2D. Can get and set for parent, transform2d (all input and output but not parent id), position, rotation and scale. As well other debug call functions.
+
+ Work on short name for dev build.
  
-### setTransform2DParent:
+### setT2Parent:
 ```js
-  conn.reducers.setTransform2DParent({
-    entityId:PARAMS.entityId,
+  conn.reducers.setT2Parent({
+    id:PARAMS.entityId,
     parentId:id // parentId
   })
 ```
 
-### setTransform2D:
+### setT2Local:
 ```js
-conn.reducers.setTransform2D({
-    entityId:PARAMS.entityId, 
+conn.reducers.setT2Local({
+    id:PARAMS.entityId, 
     position:PARAMS.t2_position, // {x:0,y:0}
     rotation:PARAMS.t2_rotation, 
     scale:PARAMS.t2_scale, // {x:1,y:1}
   });
 ```
 
-### setTransform2DPosition:
+### setT2Pos:
 ```js
-  conn.reducers.setTransform2DPosition({
-    entityId:PARAMS.entityId,
+  conn.reducers.setT2Pos({
+    id:PARAMS.entityId,
     x:PARAMS.t2_position.x,
     y:PARAMS.t2_position.y
   });
 ```
 
-### setTransform2DRotation:
+### setT2Rot:
 ```js
-  conn.reducers.setTransform2DRotation({
-    entityId:PARAMS.entityId,
+  conn.reducers.setT2Rot({
+    id:PARAMS.entityId,
     rotation: PARAMS.t2_rotation // degree
   });
 ```
 
-### setTransform2DScale:
+### setT2Scale:
 ```js
-  conn.reducers.setTransform2DScale({
-    entityId:PARAMS.entityId,
+  conn.reducers.setT2Scale({
+    id:PARAMS.entityId,
     x:PARAMS.t2_scale.x,
     y:PARAMS.t2_scale.y
   })
 ```
 
-### getTransform2DParentId:
+### getT2Parent:
 ```js
-  let _parentId = await conn.procedures.getTransform2DParentId({
-    entityId:PARAMS.entityId
+  let _parentId = await conn.procedures.getT2Parent({
+    id:PARAMS.entityId
   });
   console.log("Parent Id:", _parentId)
 ```
-### getLocalTransform2D:
+### getT2Local:
 ```js
-  let t2d = await conn.procedures.getLocalTransform2D({
-    entityId:PARAMS.entityId
+  let t2d = await conn.procedures.getT2Local({
+    id:PARAMS.entityId
   });
   console.log("getLocalTransform2D:", t2d);
   // {position:{x:0,y:0},rotation:0,scale:{x:1,y:1}}
 ```
 
-### getLocalPosition2D:
+### getT2LocalMatrix:
 ```js
-  let pos = await conn.procedures.getLocalPosition2D({
-    entityId:PARAMS.entityId
+  const matrix = await conn.procedures.getT2LocalMatrix({
+    id:PARAMS.entityId
+  })
+  console.log("local matrix: ", matrix)
+```
+
+### getT2LocalPos:
+```js
+  let pos = await conn.procedures.getT2LocalPos({
+    id:PARAMS.entityId
   });
   console.log("pos:", pos)
 ```
 
-### getLocalRotation2D:
+### getT2LocalRot:
 ```js
-  let rot = await conn.procedures.getLocalRotation2D({
-    entityId:PARAMS.entityId
+  let rot = await conn.procedures.getT2LocalRot({
+    id:PARAMS.entityId
   });
   console.log("rot:", rot)
 ```
 
-### getLocalScale2D:
+### getT2LocalScale:
 ```js
-  let scale = await conn.procedures.getLocalScale2D({
-    entityId:PARAMS.entityId
+  let scale = await conn.procedures.getT2LocalScale({
+    id:PARAMS.entityId
   });
   console.log("scale:", scale)
 ```
 
-### getWorldTransform2D:
+### getT2World:
 ```js
-  let t2d = await conn.procedures.getWorldTransform2D({
-    entityId:PARAMS.entityId
+  let t2d = await conn.procedures.getT2World({
+    id:PARAMS.entityId
   });
   console.log("getWorldTransform2D:", t2d);
   // {position:{x:1,y:1},rotation:0,scale:{x:1,y:1}}
 ```
 
-### getWorldPosition2D:
+### getT2WorldMatrix:
 ```js
-  let pos = await conn.procedures.getWorldPosition2D({
-    entityId:PARAMS.entityId
+  let matrix = await conn.procedures.getT2WorldMatrix({
+    id:PARAMS.entityId
+  });
+  console.log("world matrix: ", matrix)
+```
+
+### getT2WorldPos:
+```js
+  let pos = await conn.procedures.getT2WorldPos({
+    id:PARAMS.entityId
   });
   console.log("pos:", pos)
 ```
 
-### getWorldRotation2D:
+### getT2WorldRot:
 ```js
-  let rot = await conn.procedures.getWorldRotation2D({
-    entityId:PARAMS.entityId
+  let rot = await conn.procedures.getT2WorldRot({
+    id:PARAMS.entityId
   });
   console.log("rot:", rot)
 ```
 
-### getWorldScale2D:
+### getT2WorldScale:
 ```js
-  let scale = await conn.procedures.getWorldScale2D({
-    entityId:PARAMS.entityId
+  let scale = await conn.procedures.getT2WorldScale({
+    id:PARAMS.entityId
   });
   console.log("scale:", scale)
 ```

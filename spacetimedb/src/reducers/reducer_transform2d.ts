@@ -84,7 +84,7 @@ export const remove_entity_transform2d = spacetimedb.reducer(
 //-----------------------------------------------
 // SET TRANSFORM 2D PARENT
 //-----------------------------------------------
-export const set_transform2d_parent = spacetimedb.reducer(
+export const set_t2_parent = spacetimedb.reducer(
   { id: t.string(), parentId: t.string() }, 
   (ctx, { id, parentId }) => {
     const child = ctx.db.transform2d.entityId.find(id);
@@ -100,17 +100,17 @@ export const set_transform2d_parent = spacetimedb.reducer(
 //-----------------------------------------------
 // SET TRANSFORM 2D POSITION, ROTATION AND SCALE
 //-----------------------------------------------
-export const set_transform2d = spacetimedb.reducer(
+export const set_t2_local = spacetimedb.reducer(
   { id: t.string(), position:Vect2, rotation:t.f64(), scale:Vect2}, 
   (ctx, { id, position, rotation, scale}) => {
   const t2d = ctx.db.transform2d.entityId.find(id);
   if(t2d){
     console.log("update 2d position, rotation and scale");
-    t2d.position.x = position.x;
-    t2d.position.y = position.y;
-    t2d.rotation = rotation;
-    t2d.scale.x = scale.x;
-    t2d.scale.y = scale.y;
+    t2d.position.x = position.x ?? 0;
+    t2d.position.y = position.y ?? 0;
+    t2d.rotation = rotation ?? 0;
+    t2d.scale.x = scale.x ?? 1;
+    t2d.scale.y = scale.y ?? 1;
 
     t2d.localMatrix = computeLocal2DMatrix(t2d);
     t2d.isDirty = true;
@@ -122,14 +122,14 @@ export const set_transform2d = spacetimedb.reducer(
 //-----------------------------------------------
 // SET TRANSFORM 2D POSITION
 //-----------------------------------------------
-export const set_transform2d_position = spacetimedb.reducer(
+export const set_t2_pos = spacetimedb.reducer(
   { id: t.string(),x:t.f64(), y:t.f64()}, 
   (ctx, { id, x, y}) => {
   const t2d = ctx.db.transform2d.entityId.find(id);
   if(t2d){
     console.log("update position2d");
-    t2d.position.x = x;
-    t2d.position.y = y;
+    t2d.position.x = x ?? 0;
+    t2d.position.y = y ?? 0;
     t2d.localMatrix  = computeLocal2DMatrix(t2d);
     t2d.isDirty = true;
     ctx.db.transform2d.entityId.update(t2d);
@@ -142,7 +142,7 @@ export const set_transform2d_position = spacetimedb.reducer(
 //-----------------------------------------------
 // SET TRANSFORM 2D ROTATION
 //-----------------------------------------------
-export const set_transform2d_rotation = spacetimedb.reducer(
+export const set_t2_rot = spacetimedb.reducer(
   { id: t.string(), rotation:t.f64()}, 
   (ctx, { id, rotation}) => {
   const t2d = ctx.db.transform2d.entityId.find(id);
@@ -159,7 +159,7 @@ export const set_transform2d_rotation = spacetimedb.reducer(
 //-----------------------------------------------
 // SET TRANSFORM 2D SCALE
 //-----------------------------------------------
-export const set_transform2d_scale = spacetimedb.reducer(
+export const set_t2_scale = spacetimedb.reducer(
   { id: t.string(),x:t.f64(), y:t.f64()}, 
   (ctx, { id, x, y}) => {
   const t2d = ctx.db.transform2d.entityId.find(id);
@@ -232,10 +232,3 @@ export const update_all_transform2d = spacetimedb.reducer((ctx) => {
   console.log("Running full 2D hierarchy update");
   updateTransformHierarchy2D(ctx);
 });
-
-
-
-
-
-
-

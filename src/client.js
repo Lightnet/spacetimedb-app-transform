@@ -586,7 +586,7 @@ function selectEntity(id){
     if(addTransform2DBinding)addTransform2DBinding.disabled = true;
     if(removeTransform2DBinding)removeTransform2DBinding.disabled = false;
 
-    if(update_hierarchy_parent)update_hierarchy_parent();
+    if(update_hierarchy_parent2d)update_hierarchy_parent2d();
 
   }else{
     if(addTransform2DBinding)addTransform2DBinding.disabled = false;
@@ -839,7 +839,7 @@ let t2dhierarchyFolder = component2DFolder.addFolder({
   title: 'Transform 2D Hierarchy',
 });
 t2dhierarchyFolder.addButton({title:'Refresh'}).on('click',()=>{
-  update_hierarchy_parent();
+  update_hierarchy_parent2d();
 })
 
 hierarchyParentBinding = t2dhierarchyFolder.addBlade({
@@ -855,7 +855,7 @@ hierarchyParentBinding = t2dhierarchyFolder.addBlade({
   // PARAMS.entityId = event.value;
 });
 
-function update_hierarchy_parent(){
+function update_hierarchy_parent2d(){
   if(hierarchyParentBinding) hierarchyParentBinding.dispose();
   console.log(PARAMS.transform2d);
   let parentOptions = [];
@@ -866,9 +866,13 @@ function update_hierarchy_parent(){
   const t2d = PARAMS.transform2d.find(r=>r.entityId == PARAMS.entityId);
   if(t2d){
     console.log(t2d);
-    if(t2d.parentId != ""){
-      parentId = t2d.parentId;
+    if(t2d.parentId){ // undefined
+      
+      if(t2d.parentId != ""){
+        parentId = t2d.parentId;
+      }
     }
+    
   }
   for(const entity of PARAMS.entities){
     if(entity.id != PARAMS.entityId){
@@ -886,10 +890,10 @@ function update_hierarchy_parent(){
     // selectEntity2D(event.value)
     console.log(event.value);
     // PARAMS.entityId = event.value;
-    conn.reducers.setTransform2DParent({
+    conn.reducers.setT2Parent({
       id:PARAMS.entityId,
       parentId:event.value
-    })
+    });
   });
 }
 //-----------------------------------------------
@@ -900,12 +904,12 @@ localTransform2DFolder = component2DFolder.addFolder({
 });
 position2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_position',{label:'Position'}).on('change', async()=>{
   // console.log("change position")
-  conn.reducers.setTransform2DPosition({
+  conn.reducers.setT2Pos({
     id:PARAMS.entityId,
     x:PARAMS.t2_position.x,
-    y:PARAMS.t2_position.y
+    y:PARAMS.t2_position.y,
   });
-  const pos = await conn.procedures.getTr2WorldPos({
+  const pos = await conn.procedures.getT2WorldPos({
     id:PARAMS.entityId
   });
   console.log("pos:", pos)
@@ -917,11 +921,11 @@ position2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_position',{lab
   if (worldTransform2DFolder) worldTransform2DFolder.refresh();
 })
 rotation2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_rotation',{label:'Rotation'}).on('change', async()=>{
-  conn.reducers.setTransform2DRotation({
+  conn.reducers.setT2Rot({
     id:PARAMS.entityId,
     rotation: PARAMS.t2_rotation
   });
-  const rot = await conn.procedures.getTr2WorldRot({
+  const rot = await conn.procedures.getT2WorldRot({
     id:PARAMS.entityId
   });
   console.log("rot:", rot);
@@ -931,12 +935,12 @@ rotation2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_rotation',{lab
   worldTransform2DFolder.refresh();
 })
 scale2DBinding = localTransform2DFolder.addBinding(PARAMS, 't2_scale',{label:'Scale'}).on('change', async()=>{
-  conn.reducers.setTransform2DScale({
+  conn.reducers.setT2Scale({
     id:PARAMS.entityId,
     x:PARAMS.t2_scale.x,
     y:PARAMS.t2_scale.y
   });
-  const scale = await conn.procedures.getTr2WorldScale({
+  const scale = await conn.procedures.getT2WorldScale({
     id:PARAMS.entityId
   });
   console.log("scale:", scale);
@@ -956,7 +960,7 @@ worldTransform2DFolder.addBinding(PARAMS, 'w2_position',{label:'Position', disab
 worldTransform2DFolder.addBinding(PARAMS, 'w2_rotation',{label:'Rotation', disabled:true});
 worldTransform2DFolder.addBinding(PARAMS, 'w2_scale',{label:'Scale', disabled:true});
 //-----------------------------------------------
-// 
+// TEST
 //-----------------------------------------------
 const testEl = div({style:`position:fixed; top:2px; left:2px;`})
 van.add(document.body, testEl);
@@ -1075,7 +1079,7 @@ const t2Folder = testFolder.addFolder({
 });
 
 t2Folder.addButton({title:'get parent'}).on('click',async()=>{
-  const t2dParent = await conn.procedures.getTr2Parent({
+  const t2dParent = await conn.procedures.getT2Parent({
     id:PARAMS.entityId
   })
   console.log("t2dParent: ", t2dParent);
@@ -1086,35 +1090,35 @@ const localt2Folder = t2Folder.addFolder({
 });
 
 localt2Folder.addButton({title:'get transform'}).on('click',async()=>{
-  const t2d = await conn.procedures.getTr2Local({
+  const t2d = await conn.procedures.getT2Local({
     id:PARAMS.entityId
   })
   console.log("local t2d: ", t2d)
 });
 
 localt2Folder.addButton({title:'get matrix'}).on('click',async()=>{
-  const matrix = await conn.procedures.getTr2LocalMatrix({
+  const matrix = await conn.procedures.getT2LocalMatrix({
     id:PARAMS.entityId
   })
   console.log("local matrix: ", matrix)
 });
 
 localt2Folder.addButton({title:'get position'}).on('click',async()=>{
-  const pos = await conn.procedures.getTr2LocalPos({
+  const pos = await conn.procedures.getT2LocalPos({
     id:PARAMS.entityId
   })
   console.log("local pos: ", pos)
 });
 
 localt2Folder.addButton({title:'get rotation'}).on('click',async()=>{
-  const rot = await conn.procedures.getTr2LocalRot({
+  const rot = await conn.procedures.getT2LocalRot({
     id:PARAMS.entityId
   })
   console.log("local rot: ", rot)
 });
 
 localt2Folder.addButton({title:'get scale'}).on('click',async()=>{
-  const scale = await conn.procedures.getTr2LocalScale({
+  const scale = await conn.procedures.getT2LocalScale({
     id:PARAMS.entityId
   })
   console.log("local scale: ", scale)
@@ -1125,35 +1129,35 @@ const worldt2Folder = t2Folder.addFolder({
 });
 
 worldt2Folder.addButton({title:'get transform'}).on('click',async()=>{
-  const t2d = await conn.procedures.getTr2World({
+  const t2d = await conn.procedures.getT2World({
     id:PARAMS.entityId
   })
   console.log("world t2d: ", t2d)
 });
 
 worldt2Folder.addButton({title:'get matrix'}).on('click',async()=>{
-  const matrix = await conn.procedures.getTr2WorldMatrix({
+  const matrix = await conn.procedures.getT2WorldMatrix({
     id:PARAMS.entityId
   })
   console.log("world matrix: ", matrix)
 });
 
 worldt2Folder.addButton({title:'get position'}).on('click',async()=>{
-  const pos = await conn.procedures.getTr2WorldPos({
+  const pos = await conn.procedures.getT2WorldPos({
     id:PARAMS.entityId
   })
   console.log("world pos: ", pos)
 });
 
 worldt2Folder.addButton({title:'get rotation'}).on('click',async()=>{
-  const rotation = await conn.procedures.getTr2WorldRot({
+  const rotation = await conn.procedures.getT2WorldRot({
     id:PARAMS.entityId
   })
   console.log("world rotation: ", rotation)
 });
 
 worldt2Folder.addButton({title:'get scale'}).on('click',async()=>{
-  const scale = await conn.procedures.getTr2WorldScale({
+  const scale = await conn.procedures.getT2WorldScale({
     id:PARAMS.entityId
   })
   console.log("world scale: ", scale)

@@ -17,7 +17,7 @@ import { type Matrix2D, Transform2DResult, Vect2 } from '../types/types_transfor
 //-----------------------------------------------
 // GET TRANSFORM2D PARENT ID
 //-----------------------------------------------
-export const get_tr2_parent = spacetimedb.procedure(
+export const get_t2_parent = spacetimedb.procedure(
   { id: t.string() },
   t.option( t.string() ),
   // t.option(t.object({ x: t.f64(), y: t.f64() })),// nope
@@ -32,7 +32,7 @@ export const get_tr2_parent = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 2D LOCAL POSITION, ROTATION, SCALE, MATRIX and PARENT ID
 //-----------------------------------------------
-export const get_tr2_local = spacetimedb.procedure(
+export const get_t2_local = spacetimedb.procedure(
   { id: t.string() },
   Transform2DResult,   // reuse the same return type
   (ctx, { id }) => {
@@ -65,7 +65,7 @@ export const get_tr2_local = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 2D LOCAL MATRIX
 //-----------------------------------------------
-export const get_tr2_local_matrix = spacetimedb.procedure(
+export const get_t2_local_matrix = spacetimedb.procedure(
   { id: t.string() },
   t.option(t.array(t.f64())),   // ← return type
   (ctx, { id }) => {
@@ -81,7 +81,7 @@ export const get_tr2_local_matrix = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 2D WORLD POSITION, ROTATION AND SCALE
 //-----------------------------------------------
-export const get_tr2_world = spacetimedb.procedure(
+export const get_t2_world = spacetimedb.procedure(
   { id: t.string() },
   Transform2DResult,   // ← return type
   (ctx, { id }) => {
@@ -117,7 +117,7 @@ export const get_tr2_world = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 2D WORLD MATRIX
 //-----------------------------------------------
-export const get_tr2_world_matrix = spacetimedb.procedure(
+export const get_t2_world_matrix = spacetimedb.procedure(
   { id: t.string() },
   t.option(t.array(t.f64())),   // ← return type
   (ctx, { id }) => {
@@ -133,7 +133,7 @@ export const get_tr2_world_matrix = spacetimedb.procedure(
 //-----------------------------------------------
 // GET LOCAL POSITION 2D
 //-----------------------------------------------
-export const get_tr2_local_pos = spacetimedb.procedure(
+export const get_t2_local_pos = spacetimedb.procedure(
   { id: t.string() },
   t.option( Vect2 ),
   // t.option(t.object({ x: t.f64(), y: t.f64() })),// nope
@@ -153,7 +153,7 @@ export const get_tr2_local_pos = spacetimedb.procedure(
 //-----------------------------------------------
 // GET WORLD POSITION 2D
 //-----------------------------------------------
-export const get_tr2_world_pos = spacetimedb.procedure(
+export const get_t2_world_pos = spacetimedb.procedure(
   { id: t.string() },
   t.option( Vect2 ),
   // t.option(t.object({ x: t.f64(), y: t.f64() })),// nope
@@ -176,7 +176,7 @@ export const get_tr2_world_pos = spacetimedb.procedure(
 //-----------------------------------------------
 // GET LOCAL ROTATION 2D 
 //-----------------------------------------------
-export const get_tr2_local_rot = spacetimedb.procedure(
+export const get_t2_local_rot = spacetimedb.procedure(
   { id: t.string() },
   t.option( t.f64() ),
   (ctx, { id }) => {
@@ -194,7 +194,7 @@ export const get_tr2_local_rot = spacetimedb.procedure(
 //-----------------------------------------------
 // GET WORLD ROTATION 2D 
 //-----------------------------------------------
-export const get_tr2_world_rot = spacetimedb.procedure(
+export const get_t2_world_rot = spacetimedb.procedure(
   { id: t.string() },
   t.option( t.f64() ),
   (ctx, { id }) => {
@@ -215,7 +215,7 @@ export const get_tr2_world_rot = spacetimedb.procedure(
 //-----------------------------------------------
 // GET LOCAL SCALE 2D 
 //-----------------------------------------------
-export const get_tr2_local_scale = spacetimedb.procedure(
+export const get_t2_local_scale = spacetimedb.procedure(
   { id: t.string() },
   t.option( Vect2 ),
   (ctx, { id }) => {
@@ -232,7 +232,7 @@ export const get_tr2_local_scale = spacetimedb.procedure(
 //-----------------------------------------------
 // GET WORLD SCALE 2D 
 //-----------------------------------------------
-export const get_tr2_world_scale = spacetimedb.procedure(
+export const get_t2_world_scale = spacetimedb.procedure(
   { id: t.string() },
   t.option( Vect2 ),
   (ctx, { id }) => {
