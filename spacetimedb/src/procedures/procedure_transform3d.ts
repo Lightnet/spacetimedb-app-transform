@@ -14,7 +14,7 @@ import { decomposeMatrix, eulerFromQuaternion, radToDeg } from '../helpers/helpe
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL MATRIX
 //-----------------------------------------------
-export const get_transform3d_parent = spacetimedb.procedure(
+export const get_t3_parent = spacetimedb.procedure(
   { id: t.string() },
   t.option( t.string() ),
   (ctx, { id }) => {
@@ -30,7 +30,7 @@ export const get_transform3d_parent = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL MATRIX
 //-----------------------------------------------
-export const get_transform3d_local_matrix = spacetimedb.procedure(
+export const get_t3_local_matrix = spacetimedb.procedure(
   { id: t.string() },
   t.option( t.array(t.f64()) ),
   (ctx, { id }) => {
@@ -46,7 +46,7 @@ export const get_transform3d_local_matrix = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D WORLD MATRIX
 //-----------------------------------------------
-export const get_transform3d_world_matrix = spacetimedb.procedure(
+export const get_t3_world_matrix = spacetimedb.procedure(
   { id: t.string() },
   t.option( t.array(t.f64()) ),
   (ctx, { id }) => {
@@ -61,7 +61,7 @@ export const get_transform3d_world_matrix = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL
 //-----------------------------------------------
-export const get_transform3d_local = spacetimedb.procedure(
+export const get_t3_local = spacetimedb.procedure(
   { id: t.string() },
   t.option( Transform3DResult ),
   (ctx, { id }) => {
@@ -103,7 +103,7 @@ export const get_transform3d_local = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL POSITION
 //-----------------------------------------------
-export const get_transform3d_local_position = spacetimedb.procedure(
+export const get_t3_local_pos = spacetimedb.procedure(
   { id: t.string() },
   t.option( Vect3 ),
   (ctx, { id }) => {
@@ -118,7 +118,7 @@ export const get_transform3d_local_position = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL QUATERNION
 //-----------------------------------------------
-export const get_transform3d_local_quaternion = spacetimedb.procedure(
+export const get_t3_local_quat = spacetimedb.procedure(
   { id: t.string() },
   t.option( Quat ),
   (ctx, { id }) => {
@@ -133,7 +133,7 @@ export const get_transform3d_local_quaternion = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL ROTATION (in Degrees - Euler XYZ)
 //-----------------------------------------------
-export const get_transform3d_local_rotation = spacetimedb.procedure(
+export const get_t3_local_rot = spacetimedb.procedure(
   { id: t.string() },
   t.option(EulerDegrees),
   (ctx, { id }) => {
@@ -153,7 +153,7 @@ export const get_transform3d_local_rotation = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL SCALE
 //-----------------------------------------------
-export const get_transform3d_local_scale = spacetimedb.procedure(
+export const get_t3_local_scale = spacetimedb.procedure(
   { id: t.string() },
   t.option( Vect3 ),
   (ctx, { id }) => {
@@ -168,7 +168,7 @@ export const get_transform3d_local_scale = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D WORLD POSITION
 //-----------------------------------------------
-export const get_transform3d_world_position = spacetimedb.procedure(
+export const get_t3_world_pos = spacetimedb.procedure(
   { id: t.string() },
   t.option(Vect3),
   (ctx, { id }) => {
@@ -190,7 +190,7 @@ export const get_transform3d_world_position = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D WORLD QUATERNION
 //-----------------------------------------------
-export const get_transform3d_world_quaternion = spacetimedb.procedure(
+export const get_t3_world_quat = spacetimedb.procedure(
   { id: t.string() },
   t.option(Quat),
   (ctx, { id }) => {
@@ -205,7 +205,7 @@ export const get_transform3d_world_quaternion = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D WORLD ROTATION (in Degrees - Euler XYZ)
 //-----------------------------------------------
-export const get_transform3d_world_rotation = spacetimedb.procedure(
+export const get_t3_world_rot = spacetimedb.procedure(
   { id: t.string() },
   t.option(EulerDegrees),
   (ctx, { id }) => {
@@ -227,7 +227,7 @@ export const get_transform3d_world_rotation = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D WORLD SCALE
 //-----------------------------------------------
-export const get_transform3d_world_scale = spacetimedb.procedure(
+export const get_t3_world_scale = spacetimedb.procedure(
   { id: t.string() },
   t.option(Vect3),
   (ctx, { id }) => {
@@ -242,7 +242,7 @@ export const get_transform3d_world_scale = spacetimedb.procedure(
 //-----------------------------------------------
 // GET TRANSFORM 3D WORLD (full: pos + quat + rotation degrees + scale + matrix + parent id)
 //-----------------------------------------------
-export const get_transform3d_world = spacetimedb.procedure(
+export const get_t3_world = spacetimedb.procedure(
   { id: t.string() },
   t.option(Transform3DResult),
   (ctx, { id }) => {

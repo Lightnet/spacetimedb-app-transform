@@ -19,21 +19,21 @@ import {
 //-----------------------------------------------
 export const add_entity_transform3d = spacetimedb.reducer(
   {
-    entityId: t.string(),
+    id: t.string(),
     position: t.option(Vect3),      // ← option
     quaternion: t.option(Quat), // ← option
     scale: t.option(Vect3),         // ← option
     parentId: t.option(t.string()), // ← extra useful field
   },
-  (ctx, { entityId, position, quaternion, scale, parentId }) => {
+  (ctx, { id, position, quaternion, scale, parentId }) => {
     
     // Prevent duplicate
-    if (ctx.db.transform3d.entityId.find(entityId)) {
-      console.log(`Transform3D for entity ${entityId} already exists. Skipping.`);
+    if (ctx.db.transform3d.entityId.find(id)) {
+      console.log(`Transform3D for entity ${id} already exists. Skipping.`);
       return;
     }
 
-    console.log(`Adding new Transform3D for entity: ${entityId}`);
+    console.log(`Adding new Transform3D for entity: ${id}`);
 
     // Safe defaults with fallback
     const safePosition = position ?? { x: 0, y: 0, z: 0 };
@@ -49,7 +49,7 @@ export const add_entity_transform3d = spacetimedb.reducer(
     });
 
     ctx.db.transform3d.insert({
-      entityId,
+      entityId:id,
       parentId: safeParentId,
       position: safePosition,
       quaternion: safeQuaternion,
@@ -59,31 +59,31 @@ export const add_entity_transform3d = spacetimedb.reducer(
       isDirty: true,
     });
 
-    console.log(`Transform3D added successfully for ${entityId}`);
+    console.log(`Transform3D added successfully for ${id}`);
   }
 );
 //-----------------------------------------------
 // REMOVE TRANSFORM 3D
 //-----------------------------------------------
 export const remove_entity_transform3d = spacetimedb.reducer(
-  { entityId: t.string() },
-  (ctx, { entityId }) => {
-  ctx.db.transform3d.entityId.delete(entityId);
+  { id: t.string() },
+  (ctx, { id }) => {
+  ctx.db.transform3d.entityId.delete(id);
 });
 //-----------------------------------------------
 // SET TRANSFORM 3D PARENT
 //-----------------------------------------------
-export const set_transform3d_parent = spacetimedb.reducer(
-  {entityId:t.string(), parentId:t.string()},
-  (ctx,{entityId, parentId})=>{
+export const set_t3_parent = spacetimedb.reducer(
+  {id:t.string(), parentId:t.string()},
+  (ctx,{id, parentId})=>{
   const parent = ctx.db.transform3d.entityId.find(parentId)
-  const child = ctx.db.transform3d.entityId.find(entityId)
+  const child = ctx.db.transform3d.entityId.find(id)
   if(child){
     if(parent){
       ctx.db.transform3d.entityId.update(parent)
       child.parentId = parentId;
     }else{
-      child.parentId = "";
+      child.parentId = undefined;
     }
     ctx.db.transform3d.entityId.update(child)
   }
@@ -91,7 +91,7 @@ export const set_transform3d_parent = spacetimedb.reducer(
 //-----------------------------------------------
 // TRANSFORM 3D COMPUTE LOCAL MATRIX
 //-----------------------------------------------
-export const transform3d_compute_local_matrix = spacetimedb.reducer(
+export const t3_compute_local_matrix = spacetimedb.reducer(
   { id: t.string() },
   (ctx, { id }) => {
     const _transform3d = ctx.db.transform3d.entityId.find(id);
@@ -237,10 +237,10 @@ export const update_all_transform3ds_null = spacetimedb.reducer((ctx)=>{
 //-----------------------------------------------
 // SET TRANSFORM 3D LOCAL POSITION
 //-----------------------------------------------
-export const set_transform3d_position = spacetimedb.reducer(
-  { entityId: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),}, 
-  (ctx, { entityId, x, y, z }) => {
-  const transform = ctx.db.transform3d.entityId.find(entityId);
+export const set_t3_pos = spacetimedb.reducer(
+  { id: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),}, 
+  (ctx, { id, x, y, z }) => {
+  const transform = ctx.db.transform3d.entityId.find(id);
   if(transform){
     console.log("update position");
     transform.position.x = x;
@@ -249,7 +249,7 @@ export const set_transform3d_position = spacetimedb.reducer(
     let mat = computeLocalMatrix3D(transform)
     transform.localMatrix = mat;
     transform.isDirty = true; // need to update if there children
-    markSubtreeDirty(ctx, entityId);   // ← link transforms to update
+    markSubtreeDirty(ctx, id);   // ← link transforms to update
     console.log(transform.position)
     ctx.db.transform3d.entityId.update(transform)
   }
@@ -258,13 +258,13 @@ export const set_transform3d_position = spacetimedb.reducer(
 //-----------------------------------------------
 // SET TRANSFORM 3D LOCAL ROTATION (Euler XYZ in Degrees)
 //-----------------------------------------------
-export const set_transform3d_rotation = spacetimedb.reducer(
-  { entityId: t.string(), x: t.f64(), y: t.f64(), z: t.f64() },
-  (ctx, { entityId, x, y, z }) => {
-    const transform = ctx.db.transform3d.entityId.find(entityId);
+export const set_t3_rot = spacetimedb.reducer(
+  { id: t.string(), x: t.f64(), y: t.f64(), z: t.f64() },
+  (ctx, { id, x, y, z }) => {
+    const transform = ctx.db.transform3d.entityId.find(id);
     if (!transform) return;
 
-    console.log(`Updating rotation (Euler XYZ degrees) for entity: ${entityId}`);
+    console.log(`Updating rotation (Euler XYZ degrees) for entity: ${id}`);
 
     // Pure math quaternion from Euler XYZ degrees
     const quat = quaternionFromEulerXYZ(x, y, z);
@@ -281,20 +281,20 @@ export const set_transform3d_rotation = spacetimedb.reducer(
 
     // Mark dirty for hierarchy update
     transform.isDirty = true;
-    markSubtreeDirty(ctx, entityId);
+    markSubtreeDirty(ctx, id);
 
     ctx.db.transform3d.entityId.update(transform);
 
-    console.log(`Rotation updated successfully for ${entityId}`);
+    console.log(`Rotation updated successfully for ${id}`);
   }
 );
 //-----------------------------------------------
 // SET TRANSFORM QUAT
 //-----------------------------------------------
-export const set_transform3d_quaternion = spacetimedb.reducer(
-  { entityId: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),w:t.f64(),}, 
-  (ctx, { entityId, x, y, z, w }) => {
-  const transform = ctx.db.transform3d.entityId.find(entityId);
+export const set_t3_quat = spacetimedb.reducer(
+  { id: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),w:t.f64(),}, 
+  (ctx, { id, x, y, z, w }) => {
+  const transform = ctx.db.transform3d.entityId.find(id);
   if(transform){
     console.log("update position");
     transform.quaternion.x = x;
@@ -305,17 +305,17 @@ export const set_transform3d_quaternion = spacetimedb.reducer(
     transform.localMatrix = mat;
     // console.log(transform.quaternion)
     transform.isDirty=true;
-    markSubtreeDirty(ctx, entityId);   // ← link transforms to update
+    markSubtreeDirty(ctx, id);   // ← link transforms to update
     ctx.db.transform3d.entityId.update(transform)
   }
 });
 //-----------------------------------------------
 // SET TRANSFORM 3D SCALE
 //-----------------------------------------------
-export const set_transform3d_scale = spacetimedb.reducer(
-  { entityId: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),}, 
-  (ctx, { entityId, x, y, z }) => {
-  const transform = ctx.db.transform3d.entityId.find(entityId);
+export const set_t3_scale = spacetimedb.reducer(
+  { id: t.string(),x:t.f64(), y:t.f64(),z:t.f64(),}, 
+  (ctx, { id, x, y, z }) => {
+  const transform = ctx.db.transform3d.entityId.find(id);
   if(transform){
     console.log("update position");
     transform.scale.x = x;
@@ -324,18 +324,19 @@ export const set_transform3d_scale = spacetimedb.reducer(
     let mat = computeLocalMatrix3D(transform)
     transform.localMatrix = mat;
     transform.isDirty = true; // need to update if there children
-    markSubtreeDirty(ctx, entityId);   // ← link transforms to update
+    markSubtreeDirty(ctx, id);   // ← link transforms to update
     // console.log(transform.scale)
     ctx.db.transform3d.entityId.update(transform)
   }
 });
 //-----------------------------------------------
 // SET TRANSFORM 3D LOCAL MATRIX
+// need to convert to position, quat and scale in case of override.
 //-----------------------------------------------
-export const set_transform3d_local_matrix = spacetimedb.reducer(
-  { entityId: t.string(), matrix: t.array(t.f32()) }, 
-  (ctx, { entityId, matrix }) => {
-  const transform = ctx.db.transform3d.entityId.find(entityId);
+export const set_t3_local_matrix = spacetimedb.reducer(
+  { id: t.string(), matrix: t.array(t.f32()) }, 
+  (ctx, { id, matrix }) => {
+  const transform = ctx.db.transform3d.entityId.find(id);
   if(transform){
     transform.localMatrix = matrix;
     ctx.db.transform3d.entityId.update(transform);
@@ -343,17 +344,20 @@ export const set_transform3d_local_matrix = spacetimedb.reducer(
 });
 //-----------------------------------------------
 // SET TRANSFORM WORLD MATRIX
+// need to convert to position, quat and scale in case of override.
 //-----------------------------------------------
-export const set_transform3d_world_matrix = spacetimedb.reducer(
-  { entityId: t.string(), matrix: t.array(t.f32()) }, 
-  (ctx, { entityId, matrix }) => {
-  const transform = ctx.db.transform3d.entityId.find(entityId);
+export const set_t3_world_matrix = spacetimedb.reducer(
+  { id: t.string(), matrix: t.array(t.f32()) }, 
+  (ctx, { id, matrix }) => {
+  const transform = ctx.db.transform3d.entityId.find(id);
   if(transform){
     transform.worldMatrix = matrix;
     ctx.db.transform3d.entityId.update(transform);
   }
 });
-
+//-----------------------------------------------
+// 
+//-----------------------------------------------
 export const clear_all_transform3ds = spacetimedb.reducer((ctx) => {
   for(const t3d of ctx.db.transform3d.iter()){
     ctx.db.transform3d.entityId.delete(t3d.entityId);

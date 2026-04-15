@@ -15,11 +15,11 @@ export const create_entity = spacetimedb.reducer({},
 //-----------------------------------------------
 // DELETE ENTITY
 //-----------------------------------------------
-export const delete_entity = spacetimedb.reducer({entiyId:t.string()}, 
-  (ctx,{entiyId}) => {
+export const delete_entity = spacetimedb.reducer({id:t.string()}, 
+  (ctx,{id}) => {
     // need to check transform
-    ctx.db.entity.id.delete(entiyId);
-    ctx.db.transform2d.entityId.delete(entiyId);
-    ctx.db.transform3d.entityId.delete(entiyId);
+    ctx.db.entity.id.delete(id);
+    ctx.db.transform2d.entityId.delete(id);
+    ctx.db.transform3d.entityId.delete(id);
 });
 

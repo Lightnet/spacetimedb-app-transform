@@ -4,7 +4,6 @@
 
 # Status:
 - Work in progress.
-- Working on the short name functions.
 
 # Program Languages:
 - Typescript ( server )
@@ -58,6 +57,7 @@
 - [x] transform 3d
   - [x] add 
   - [x] remove 
+  - [x] parent
 - [x] transform 2d
   - [x] add 
   - [x] remove 
@@ -75,7 +75,7 @@
 - [x] still need to test more
 - [x] transform 3D hierarchy
   - [x] set / get transform3d
-  - [x] get matrix
+  - [ ] set / get matrix ?
   - [x] set / get position 
   - [x] set / get quaternion 
   - [x] set / get rotation 
@@ -83,7 +83,7 @@
   - [x] parent to child update. 
 - [x] transform 2D hierarchy
   - [x] set / get transform3d
-  - [x] get matrix
+  - [ ] set / get  matrix
   - [x] set / get position
   - [x] set / get rotation
   - [x] set / get scale
@@ -178,7 +178,7 @@ export const transform3d = table(
     parentId: t.string().optional(),
     isDirty:t.bool().default(true),
     position: Vect3,
-    quaternion: Quaternion,
+    quaternion: Quat,
     scale: Vect3,
     localMatrix: t.array(t.f32()).optional(),
     worldMatrix: t.array(t.f32()).optional(),
@@ -225,7 +225,7 @@ export const transform2d = table(
 ### deleteEntity:
 ```js
   conn.reducers.deleteEntity({
-    entiyId:PARAMS.entityId
+    id:PARAMS.entityId
   });
 ```
   Delete Entity base on entityId. Check for any components to be delete as well.
@@ -235,14 +235,14 @@ export const transform2d = table(
 ### addEntityTransform3D:
 ```js
 conn.reducers.addEntityTransform3D({
-  entityId: PARAMS.entityId
+  id: PARAMS.entityId
 });
 ```
   Entity add transform 3D.
 
 ```js
   conn.reducers.addEntityTransform3D({
-    entityId: PARAMS.entityId, // required
+    id: PARAMS.entityId, // required
     position:PARAMS.ph_position, // option {x,y,z}
     quaternion:PARAMS.ph_quaternion, // option {x,y,z,w}
     scale:PARAMS.ph_scale, // option // {x,y,z}
@@ -255,15 +255,15 @@ conn.reducers.addEntityTransform3D({
 ### removeEntityTransform3D:
 ```js
 conn.reducers.removeEntityTransform3D({
-  entityId:PARAMS.entityId
+  id:PARAMS.entityId
 })
 ```
   Entity remove transform 3D.
 
-### setTransform3DPosition
+### setT3Pos
 ```js
-conn.reducers.setTransform3DPosition({
-  entityId:PARAMS.entityId,
+conn.reducers.setT3Pos({
+  id:PARAMS.entityId,
   x:PARAMS.t_position.x,
   y:PARAMS.t_position.y,
   z:PARAMS.t_position.z
@@ -271,11 +271,12 @@ conn.reducers.setTransform3DPosition({
 ```
   Transform 3D set local position.
 
-### setTransform3DRotation:
-  Three js has the helper class and functions to make rotate degree (x, y, z) to Quaternion (x, y, z, w).
+### setT3Rot:
+  Three js has the helper class and functions to make rotate degree (x, y, z) to 
+  Quaternion (x, y, z, w).
 ```js
-conn.reducers.setTransform3DRotation({
-  entityId:PARAMS.entityId,
+conn.reducers.setT3Rot({
+  id:PARAMS.entityId,
   x:PARAMS.t_rotation.x,
   y:PARAMS.t_rotation.y,
   z:PARAMS.t_rotation.z,
@@ -283,10 +284,11 @@ conn.reducers.setTransform3DRotation({
 ```
 - This use degree to convert on the server side.
 
-### setTransform3DQuaternion:
+### setT3Quat:
+Quaternion (x, y, z, w)
 ```js
-conn.reducers.setTransform3DQuaternion({
-  entityId:PARAMS.entityId,
+conn.reducers.setT3Quat({
+  id:PARAMS.entityId,
   x:rotation.x,
   y:rotation.y,
   z:rotation.z,
@@ -294,19 +296,19 @@ conn.reducers.setTransform3DQuaternion({
 })
 ```
 
-### setEntityLocalScale:
+### setT3Scale:
 ```js
-conn.reducers.setTransform3DScale({
-  entityId:PARAMS.entityId,
+conn.reducers.setT3Scale({
+  id:PARAMS.entityId,
   x:PARAMS.t_scale.x,
   y:PARAMS.t_scale.y,
   z:PARAMS.t_scale.z
 })
 ```
 
-### getTransform3DLocal:
+### getT3Local:
 ```js
-  const transform2d = await conn.procedures.getTransform3DLocal({
+  const transform2d = await conn.procedures.getT3Local({
     id:PARAMS.entityId
   })
   console.log("local transform2d: ", transform2d)
@@ -318,70 +320,88 @@ quaternion: {x: 0, y: 0, z: 0, w: 1}
 scale: {x: 1, y: 1, z: 1}
 ```
 
-
-### getTransform3DLocalPosition:
+### getT3LocalMatrix:
 ```js
-  const pos = await conn.procedures.getTransform3DLocalPosition({
+const mat = await conn.procedures.getT3LocalMatrix({
+    id:PARAMS.entityId
+  })
+  console.log("local mattix: ", mat)
+```
+
+
+### getT3LocalPos:
+```js
+  const pos = await conn.procedures.getT3LocalPos({
     id:PARAMS.entityId
   })
   console.log("local postion: ", pos)
 ```
 
-### getTransform3DLocalQuaternion:
+### getT3LocalQuat:
 ```js
-  const quat = await conn.procedures.getTransform3DLocalQuaternion({
+  const quat = await conn.procedures.getT3LocalQuat({
     id:PARAMS.entityId
   })
   console.log("local quat: ", quat)
 ```
 
-### getTransform3DLocalScale:
+### getT3LocalScale:
 ```js
-  const scale = await conn.procedures.getTransform3DLocalScale({
+  const scale = await conn.procedures.getT3LocalScale({
     id:PARAMS.entityId
   })
   console.log("local scale: ", scale)
 ```
 
-### getTransform3DLocalRotation:
+### getT3LocalRot:
 ```js
-  const rotate = await conn.procedures.getTransform3DLocalRotation({
+  const rotate = await conn.procedures.getT3LocalRot({
     id:PARAMS.entityId
   })
   console.log("local rotate: ", rotate)
 ```
 
-### getTransform3DWorld:
+### getT3World:
 ```js
-  const t3d = await conn.procedures.getTransform3DWorld({
+  const t3d = await conn.procedures.getT3World({
     id:PARAMS.entityId
   })
   console.log("world transform3d: ", t3d)
 ```
-### getTransform3DWorldRot:
+
+### getT3WorldMatrix:
 ```js
-  const tranform3d = await conn.procedures.getTransform3DWorldRot({
+  const mat = await conn.procedures.getT3WorldMatrix({
     id:PARAMS.entityId
   })
-  console.log("local tranform3d: ", tranform3d)
+  console.log("world mattix: ", mat)
 ```
-### getTransform3DWorldPosition:
+
+### getT3WorldPos:
 ```js
-  const pos = await conn.procedures.getTransform3DWorldPosition({
+  const pos = await conn.procedures.getT3WorldPos({
     id:PARAMS.entityId
   })
   console.log("local pos: ", pos)
 ```
-### getTransform3DWorldQuaternion:
+### getT3WorldQuat:
 ```js
-  const quat = await conn.procedures.getTransform3DWorldQuaternion({
+  const quat = await conn.procedures.getT3WorldQuat({
     id:PARAMS.entityId
   })
   console.log("local quat: ", quat)
 ```
-### getTransform3DWorldScale:
+### getT3WorldRot:
 ```js
-  const scale = await conn.procedures.getTransform3DWorldScale({
+  const tranform3d = await conn.procedures.getT3WorldRot({
+    id:PARAMS.entityId
+  })
+  console.log("local tranform3d: ", tranform3d)
+```
+
+### getT3WorldScale:
+```js
+  const scale = await conn.procedures.getT3WorldScale({
     id:PARAMS.entityId
   })
   console.log("local scale: ", scale)
@@ -402,7 +422,7 @@ conn.reducers.updateAllTransform3DsNull();
 ## Transform 2D:
  There are get and set function for transform 2D. Can get and set for parent, transform2d (all input and output but not parent id), position, rotation and scale. As well other debug call functions.
 
- Work on short name for dev build.
+ Work on short names for dev build.
  
 ### setT2Parent:
 ```js
