@@ -251,7 +251,8 @@ export const set_t3_pos = spacetimedb.reducer(
     transform.isDirty = true; // need to update if there children
     markSubtreeDirty(ctx, id);   // ← link transforms to update
     console.log(transform.position)
-    ctx.db.transform3d.entityId.update(transform)
+    ctx.db.transform3d.entityId.update(transform);
+    update_all_transform3ds(ctx,{});
   }
 });
 
@@ -284,6 +285,7 @@ export const set_t3_rot = spacetimedb.reducer(
     markSubtreeDirty(ctx, id);
 
     ctx.db.transform3d.entityId.update(transform);
+    update_all_transform3ds(ctx,{});
 
     console.log(`Rotation updated successfully for ${id}`);
   }
@@ -307,6 +309,7 @@ export const set_t3_quat = spacetimedb.reducer(
     transform.isDirty=true;
     markSubtreeDirty(ctx, id);   // ← link transforms to update
     ctx.db.transform3d.entityId.update(transform)
+    update_all_transform3ds(ctx,{});
   }
 });
 //-----------------------------------------------
@@ -327,6 +330,7 @@ export const set_t3_scale = spacetimedb.reducer(
     markSubtreeDirty(ctx, id);   // ← link transforms to update
     // console.log(transform.scale)
     ctx.db.transform3d.entityId.update(transform)
+    update_all_transform3ds(ctx,{});
   }
 });
 //-----------------------------------------------

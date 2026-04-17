@@ -39,5 +39,3 @@ export const Transform3DResult = t.object('Transform3DResult',{
   matrix:t.option(t.array(t.f64())),
   parentId: t.option(t.string()),
 });
-
-

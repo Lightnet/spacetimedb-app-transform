@@ -87,7 +87,7 @@ export function extractRotationFromMatrix2D(mat: Matrix2D): number {
   const rotationRad = Math.atan2(c, a);
   let rotationDeg = rotationRad * (180 / Math.PI);
   // Optional: normalize to [0, 360) range
-  rotationDeg = ((rotationDeg % 360) + 360) % 360;
+  // rotationDeg = ((rotationDeg % 360) + 360) % 360;
   return rotationDeg;
 }
 
