@@ -38,13 +38,18 @@
 ```
 
 - [ ] Schedule Tables
+  - [x] sample move transform3d
+    - just the test which can move but it effect all due just testing.
 - [x] reducer (function for client to access)
 - [ ] trigger event
 
 ## refs:
 - https://spacetimedb.com/docs/databases/transactions-atomicity
 
-
+## Animation:
+  Work in progress. Note this is just simple move test. By using the Schedule Tables due to sandbox. It mean that javascript timer functions are disable but use SpaceTimeDB Schedule Tables.
+  
+# Screen Shot:
 ![Screenshot of browser test](screenshots/transform3d20260410.png)
 
 # Editor:
