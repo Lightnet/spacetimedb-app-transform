@@ -5,7 +5,7 @@ import { t, SenderError } from 'spacetimedb/server';
 import spacetimedb from '../module';
 import { 
   computeLocalMatrix3D, 
-  multiplyMatrices,
+  multiplyMatrices3D,
   quaternionFromEulerXYZ, 
 } from '../helpers/helper_transform3d';
 import { 
@@ -207,7 +207,7 @@ export const update_all_transform3ds = spacetimedb.reducer((ctx) => {
         // worldMat = parentWorld.clone().multiply(localMat);
         const parentWorld = parent.worldMatrix as Mat4;
         const localMat = computeLocalMatrix3D(transform);
-        worldMat = multiplyMatrices(parentWorld, localMat);
+        worldMat = multiplyMatrices3D(parentWorld, localMat);
 
       } else {
         worldMat = computeLocalMatrix3D(transform);

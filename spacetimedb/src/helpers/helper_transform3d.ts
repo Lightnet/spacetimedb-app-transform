@@ -50,7 +50,7 @@ export function computeLocalMatrix3D(transform: {
   return mat;
 }
 
-export function multiplyMatrices(a: Mat4, b: Mat4): Mat4 {
+export function multiplyMatrices3D(a: Mat4, b: Mat4): Mat4 {
   const out: Mat4 = new Array(16);
 
   const a00 = a[0],  a01 = a[1],  a02 = a[2],  a03 = a[3];
@@ -163,7 +163,7 @@ export function eulerFromQuaternion(q: Quat): { x: number; y: number; z: number 
 }
 
 // Simple Matrix4 decompose (position + rotation quaternion + scale)
-export function decomposeMatrix(matrix: number[]): {
+export function decomposeMatrix3D(matrix: number[]): {
   position: Vec3;
   quaternion: Quat;
   scale: Vec3;

@@ -10,7 +10,7 @@ import {
   extractRotationFromMatrix2D, 
   extractScaleFromMatrix2D, 
   getParentWorldMatrix2D, 
-  identity, 
+  identity2D, 
   multiply2D 
 } from '../helpers/helper_transform2d';
 import { type Matrix2D, Transform2DResult, Vect2 } from '../types/types_transform2d';
@@ -50,7 +50,7 @@ export const get_t2_local = spacetimedb.procedure(
 
       const local = t2d.isDirty 
         ? computeLocal2DMatrix(t2d) 
-        : (t2d.localMatrix as Matrix2D) ?? identity;
+        : (t2d.localMatrix as Matrix2D) ?? identity2D;
 
       return {
         position: extractPositionFromMatrix2D(local),
@@ -99,7 +99,7 @@ export const get_t2_world = spacetimedb.procedure(
 
       const local = t2d.isDirty 
         ? computeLocal2DMatrix(t2d) 
-        : (t2d.localMatrix as Matrix2D) ?? identity;
+        : (t2d.localMatrix as Matrix2D) ?? identity2D;
 
       const parentWorld = getParentWorldMatrix2D(tx, t2d.parentId);
       const worldMat = multiply2D(parentWorld, local);
@@ -144,7 +144,7 @@ export const get_t2_local_pos = spacetimedb.procedure(
 
       const local = t2d.isDirty 
         ? computeLocal2DMatrix(t2d) 
-        : (t2d.localMatrix as Matrix2D) ?? identity;
+        : (t2d.localMatrix as Matrix2D) ?? identity2D;
 
       return extractPositionFromMatrix2D(local);
     });
@@ -164,7 +164,7 @@ export const get_t2_world_pos = spacetimedb.procedure(
 
       const local = t2d.isDirty 
         ? computeLocal2DMatrix(t2d) 
-        : (t2d.localMatrix as Matrix2D) ?? identity;
+        : (t2d.localMatrix as Matrix2D) ?? identity2D;
 
       const parentWorld = getParentWorldMatrix2D(tx, t2d.parentId);
       const worldMat = multiply2D(parentWorld, local);
@@ -186,7 +186,7 @@ export const get_t2_local_rot = spacetimedb.procedure(
 
       const local = t2d.isDirty 
         ? computeLocal2DMatrix(t2d) 
-        : (t2d.localMatrix as Matrix2D) ?? identity;
+        : (t2d.localMatrix as Matrix2D) ?? identity2D;
 
       return extractRotationFromMatrix2D(local);
     });
@@ -204,7 +204,7 @@ export const get_t2_world_rot = spacetimedb.procedure(
 
       const local = t2d.isDirty 
         ? computeLocal2DMatrix(t2d) 
-        : (t2d.localMatrix as Matrix2D) ?? identity;
+        : (t2d.localMatrix as Matrix2D) ?? identity2D;
 
       const parentWorld = getParentWorldMatrix2D(tx, t2d.parentId);
       const worldMat = multiply2D(parentWorld, local);
@@ -224,7 +224,7 @@ export const get_t2_local_scale = spacetimedb.procedure(
       if (!t2d) return undefined;
       const local = t2d.isDirty 
         ? computeLocal2DMatrix(t2d) 
-        : (t2d.localMatrix as Matrix2D) ?? identity;
+        : (t2d.localMatrix as Matrix2D) ?? identity2D;
 
       return extractScaleFromMatrix2D(local);
     });
@@ -242,7 +242,7 @@ export const get_t2_world_scale = spacetimedb.procedure(
 
       const local = t2d.isDirty 
         ? computeLocal2DMatrix(t2d) 
-        : (t2d.localMatrix as Matrix2D) ?? identity;
+        : (t2d.localMatrix as Matrix2D) ?? identity2D;
 
       const parentWorld = getParentWorldMatrix2D(tx, t2d.parentId);
       const worldMat = multiply2D(parentWorld, local);

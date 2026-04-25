@@ -10,7 +10,7 @@ import {
   Transform3DResult,
   Vect3,
 } from '../types/types_transform3d';
-import { decomposeMatrix, eulerFromQuaternion, radToDeg } from '../helpers/helper_transform3d';
+import { decomposeMatrix3D, eulerFromQuaternion, radToDeg } from '../helpers/helper_transform3d';
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL MATRIX
 //-----------------------------------------------
@@ -80,7 +80,7 @@ export const get_t3_local = spacetimedb.procedure(
 
       let rotation;
       if(t3d.localMatrix){
-        const { position, quaternion, scale } = decomposeMatrix(t3d.localMatrix);
+        const { position, quaternion, scale } = decomposeMatrix3D(t3d.localMatrix);
         const eulerRad = eulerFromQuaternion(quaternion);
         rotation = {
           x: radToDeg(eulerRad.x),
@@ -198,7 +198,7 @@ export const get_t3_world_quat = spacetimedb.procedure(
       const t3d = tx.db.transform3d.entityId.find(id);
       if (!t3d?.worldMatrix || t3d.worldMatrix.length < 16) return undefined;
 
-      return decomposeMatrix(t3d.worldMatrix).quaternion;
+      return decomposeMatrix3D(t3d.worldMatrix).quaternion;
     });
   }
 );
@@ -213,7 +213,7 @@ export const get_t3_world_rot = spacetimedb.procedure(
       const t3d = tx.db.transform3d.entityId.find(id);
       if (!t3d?.worldMatrix || t3d.worldMatrix.length < 16) return undefined;
 
-      const { quaternion } = decomposeMatrix(t3d.worldMatrix);
+      const { quaternion } = decomposeMatrix3D(t3d.worldMatrix);
       const eulerRad = eulerFromQuaternion(quaternion);
 
       return {
@@ -235,7 +235,7 @@ export const get_t3_world_scale = spacetimedb.procedure(
       const t3d = tx.db.transform3d.entityId.find(id);
       if (!t3d?.worldMatrix || t3d.worldMatrix.length < 16) return undefined;
 
-      return decomposeMatrix(t3d.worldMatrix).scale;
+      return decomposeMatrix3D(t3d.worldMatrix).scale;
     });
   }
 );
@@ -250,7 +250,7 @@ export const get_t3_world = spacetimedb.procedure(
       const t3d = tx.db.transform3d.entityId.find(id);
       if (!t3d?.worldMatrix || t3d.worldMatrix.length < 16) return undefined;
 
-      const { position, quaternion, scale } = decomposeMatrix(t3d.worldMatrix);
+      const { position, quaternion, scale } = decomposeMatrix3D(t3d.worldMatrix);
       const eulerRad = eulerFromQuaternion(quaternion);
 
       return {

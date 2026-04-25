@@ -9,7 +9,7 @@ import { type Matrix2D } from "../types/types_transform2d";
 // MATH
 //-----------------------------------------------
 
-export const identity: Matrix2D = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+export const identity2D: Matrix2D = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 
 export function translate2D(x: number, y: number): Matrix2D {
   return [1, 0, x, 0, 1, y, 0, 0, 1];
@@ -51,9 +51,9 @@ export function computeLocal2DMatrix(t: any): Matrix2D {
 }
 
 export function getParentWorldMatrix2D(dbCtx: any, parentId: string | undefined ): Matrix2D {
-  if (!parentId) return identity;
+  if (!parentId) return identity2D;
   const parent = dbCtx.db.transform2d.entityId.find(parentId);
-  return parent?.worldMatrix ?? identity;   // ← safe fallback
+  return parent?.worldMatrix ?? identity2D;   // ← safe fallback
 }
 
 // Extract {x, y} from worldMatrix (translation is at indices 2 and 5 in row-major 3x3)
