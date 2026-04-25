@@ -3,9 +3,7 @@
 //-----------------------------------------------
 import { table, t } from 'spacetimedb/server';
 import { Vect2 } from '../types/types_transform2d';
-//-----------------------------------------------
-// 
-//-----------------------------------------------
+// table: transform2d
 export const transform2d = table(
   { 
     name: 'transform2d', 

@@ -1,18 +1,11 @@
 //-----------------------------------------------
+// procedure: transform2d
 // procedure - uses withTx for safe read access
 // this is return value for client and promise sync 
 //-----------------------------------------------
 import spacetimedb from '../module';
 import { t, SenderError  } from 'spacetimedb/server';
-import { 
-  computeLocal2DMatrix, 
-  extractPositionFromMatrix2D, 
-  extractRotationFromMatrix2D, 
-  extractScaleFromMatrix2D, 
-  getParentWorldMatrix2D, 
-  identity2D, 
-  multiply2D 
-} from '../helpers/helper_transform2d';
+import { computeLocal2DMatrix, extractPositionFromMatrix2D, extractRotationFromMatrix2D, extractScaleFromMatrix2D, getParentWorldMatrix2D, identity2D, multiply2D } from '../helpers/helper_transform2d';
 import { type Matrix2D, Transform2DResult, Vect2 } from '../types/types_transform2d';
 //-----------------------------------------------
 // GET TRANSFORM2D PARENT ID

@@ -1,4 +1,5 @@
 //-----------------------------------------------
+// reducer: entity
 // REDUCER ENTITY
 //-----------------------------------------------
 import { t, SenderError } from 'spacetimedb/server';

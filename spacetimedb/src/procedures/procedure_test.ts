@@ -1,5 +1,5 @@
 //-----------------------------------------------
-//
+// procedure: test
 //-----------------------------------------------
 // https://spacetimedb.com/docs/functions/procedures
 import { table, t } from 'spacetimedb/server';

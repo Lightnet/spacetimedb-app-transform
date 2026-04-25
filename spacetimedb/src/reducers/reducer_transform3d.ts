@@ -1,18 +1,11 @@
 //-----------------------------------------------
+// reducer: transform3d
 // REDUCER TRANSFORM 3D
 //-----------------------------------------------
 import { t, SenderError } from 'spacetimedb/server';
 import spacetimedb from '../module';
-import { 
-  computeLocalMatrix3D, 
-  multiplyMatrices3D,
-  quaternionFromEulerXYZ, 
-} from '../helpers/helper_transform3d';
-import { 
-  Quat,
-  Vect3,
-  type Mat4,
-} from '../types/types_transform3d';
+import { computeLocalMatrix3D, multiplyMatrices3D, quaternionFromEulerXYZ } from '../helpers/helper_transform3d';
+import { Quat, Vect3, type Mat4 } from '../types/types_transform3d';
 
 //-----------------------------------------------
 // ADD TRANSFORM 3D

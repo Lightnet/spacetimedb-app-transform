@@ -606,6 +606,18 @@ function test_pane(){
     }
   }
 
+  testFolder.addButton({title:'test play animation'}).on('click', async ()=>{
+    const conn = connState.val;
+    console.log(conn.reducers);
+    conn.reducers.startTransformtriAnimation({});
+  });
+
+  testFolder.addButton({title:'test stop animation'}).on('click', async ()=>{
+    const conn = connState.val;
+    console.log(conn.reducers);
+    await conn.reducers.stopTransformtriAnimation({});
+  });
+
   debug_transform(testPane);
 }
 

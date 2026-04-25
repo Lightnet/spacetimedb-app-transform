@@ -3,10 +3,12 @@
 //-----------------------------------------------
 import { schema, table, t, SenderError  } from 'spacetimedb/server';
 import { sessions } from './tables/table_session';
-import { users, userAuth } from './tables/table_user';
+import { users } from './tables/table_user';
 import { entity} from './tables/table_entity';
 import { transform3d } from './tables/table_transform3d';
 import { transform2d } from './tables/table_transform2d';
+import { userAuth } from './tables/table_userauth';
+import { transformtri_animations } from './tables/table_animation3d';
 //-----------------------------------------------
 // SCEHEMA
 //-----------------------------------------------
@@ -17,6 +19,7 @@ const spacetimedb = schema({
   entity,
   transform3d,
   transform2d,
+  transformtri_animations,
 });
 //-----------------------------------------------
 // INIT

@@ -1,15 +1,11 @@
 //-----------------------------------------------
+// procedure: transform3d
 // GET TRANSFORM 3D RETURN VALUES
 //-----------------------------------------------
 // https://spacetimedb.com/docs/functions/procedures
 import { t } from 'spacetimedb/server';
 import spacetimedb from "../module";
-import { 
-  EulerDegrees,
-  Quat,
-  Transform3DResult,
-  Vect3,
-} from '../types/types_transform3d';
+import { EulerDegrees, Quat, Transform3DResult, Vect3} from '../types/types_transform3d';
 import { decomposeMatrix3D, eulerFromQuaternion, radToDeg } from '../helpers/helper_transform3d';
 //-----------------------------------------------
 // GET TRANSFORM 3D LOCAL MATRIX

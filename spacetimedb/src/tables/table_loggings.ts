@@ -2,9 +2,7 @@
 // Model tables
 //-----------------------------------------------
 import { table, t } from 'spacetimedb/server';
-//-----------------------------------------------
-// 
-//-----------------------------------------------
+// table: loggings
 export const loggings = table(
   { 
     name: 'loggings', 

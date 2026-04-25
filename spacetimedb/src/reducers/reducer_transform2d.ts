@@ -1,4 +1,5 @@
 //-----------------------------------------------
+// reducer: transform2d
 // REDUCER TRANSFORM 2D
 //-----------------------------------------------
 import { t, SenderError } from 'spacetimedb/server';

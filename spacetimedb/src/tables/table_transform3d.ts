@@ -3,9 +3,7 @@
 //-----------------------------------------------
 import { table, t } from 'spacetimedb/server';
 import { Quat, Vect3 } from '../types/types_transform3d';
-//-----------------------------------------------
-// 
-//-----------------------------------------------
+// table: transform3d
 export const transform3d = table(
   { 
     name: 'transform3d', 
